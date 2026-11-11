@@ -57,17 +57,25 @@ namespace Game
         public string Description { get { return _description; } }
 
         // This character's moveset, PlayerMovement asks for it once and keeps it
-        // TODO(Joseph): return MovesetFactory.Create(_moveset)
+        // TODO(Joseph) [X] Completed
         public IMoveset CreateMoveset()
         {
-            return null;
+            return MovesetFactory.Create(_moveset);
         }
 
         // Unity calls this in the editor whenever a value changes, never during the game
         // Warn about bad data, e.g. "[Character] Ray: display name is empty"
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void OnValidate()
         {
+            if (string.IsNullOrWhiteSpace(_displayName))
+            {
+                Debug.LogWarning($"[Character] {name}: display name is empty", this);
+            }
+            if (_maxCharges < 1)
+            {
+                Debug.LogWarning($"[Character] {name}: max charges must be at least 1", this);
+            }
         }
     }
 }

@@ -81,44 +81,69 @@ namespace Game
 
         // Floor centre of a cell in world space
         //   origin + ((x + 0.5) * cellSize, level * levelHeight, (z + 0.5) * cellSize)
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public Vector3 GridToWorld(GridCoord coord)
         {
-            return Vector3.zero;
+            return _origin + new Vector3((coord.x + 0.5f) * _cellSize, coord.level * _levelHeight, (coord.z + 0.5f) * _cellSize);
         }
 
         // The cell a world position is in, the reverse of GridToWorld
         // Round down: x = floor((world.x - origin.x) / cellSize), same for level and z
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public GridCoord WorldToGrid(Vector3 world)
         {
-            return default;
+            Vector3 local = world - _origin;
+            return new GridCoord(Mathf.FloorToInt(local.x / _cellSize),
+                                 Mathf.FloorToInt(local.y / _levelHeight),
+                                 Mathf.FloorToInt(local.z / _cellSize));
         }
 
         // Where a player's feet go on this pad
         //   GridToWorld(coord) + (dx, 0, dz) * padAnchorDistance, with (dx, dz) = MapLayout.AnchorDirection(anchor)
         // Ghost markers, spawning, teleporting and the minimap all use this
         // We need to make sure this matches MapValidator.EyePosition (same maths, minus the eye height)
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public Vector3 PadWorldPosition(GridCoord coord)
         {
-            return Vector3.zero;
+            (int dx, int dz) = MapLayout.AnchorDirection(_layout.GetAnchor(coord));
+            return GridToWorld(coord) + new Vector3(dx, 0f, dz) * _padAnchorDistance;
         }
 
         // The sizes MapValidator needs for line of sight, as plain numbers
         // eyeHeight comes from MatchSettings.StandardEyeHeight
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public MapGeometry Geometry(float eyeHeight)
         {
-            return default;
+            MapGeometry geometry = new MapGeometry();
+            geometry.cellSize = _cellSize;
+            geometry.levelHeight = _levelHeight;
+            geometry.padAnchorDistance = _padAnchorDistance;
+            geometry.eyeHeight = eyeHeight;
+            geometry.halfWallHeight = _halfWallHeight;
+            geometry.windowBottom = _windowBottom;
+            geometry.windowTop = _windowTop;
+            return geometry;
         }
 
         // Unity calls this in the editor whenever a value changes, never during the game
         // Warn if: windowBottom is not below windowTop, the standing eye height (1.65) is not inside the window opening,
         // halfWallHeight is above the standing eye height (you could never shoot over it)
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void OnValidate()
         {
+            const float StandingEyeHeight = 1.65f;
+            if (_windowBottom >= _windowTop)
+            {
+                Debug.LogWarning($"[Map] {name}: window bottom ({_windowBottom}) must be below window top ({_windowTop})", this);
+            }
+            if (StandingEyeHeight < _windowBottom || StandingEyeHeight > _windowTop)
+            {
+                Debug.LogWarning($"[Map] {name}: standing eye height ({StandingEyeHeight}) is outside the window opening", this);
+            }
+            if (_halfWallHeight > StandingEyeHeight)
+            {
+                Debug.LogWarning($"[Map] {name}: half walls ({_halfWallHeight}) are above standing eye height, nobody could shoot over them", this);
+            }
         }
     }
 }

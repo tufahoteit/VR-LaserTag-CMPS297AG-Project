@@ -59,32 +59,69 @@ namespace Game
         // Find Player (GetComponentInParent), the collider and the renderer on this object (the vest has one, the head doesn't),
         // PlayerProfile (GetComponentInParent), make _block
         // We need to make sure both exist, log an error naming this object if one is missing
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void Awake()
         {
+            Player = GetComponentInParent<PlayerCombat>();
+            _collider = GetComponent<Collider>();
+            _renderer = GetComponent<Renderer>();
+            _profile = GetComponentInParent<PlayerProfile>();
+            _block = new MaterialPropertyBlock();
+            if (Player == null)
+            {
+                Debug.LogError($"[Hitbox] {name}: no PlayerCombat in its parents", this);
+            }
+            if (_collider == null)
+            {
+                Debug.LogError($"[Hitbox] {name}: no collider on this object", this);
+            }
         }
 
         // Puts this hitbox on the right layer for this headset
         //   isLocalPlayer true (your own body): Ignore Raycast, your laser can never hit yourself
         //   isLocalPlayer false (everyone else): Hitbox (LayerMask.NameToLayer(Layers.Hitbox))
         // The vest's renderer: off on your own headset, on for everyone else
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public void ApplyLayer(bool isLocalPlayer)
         {
+            int layer = isLocalPlayer ? LayerMask.NameToLayer("Ignore Raycast") : LayerMask.NameToLayer(Layers.Hitbox);
+            if (layer < 0)
+            {
+                Debug.LogError($"[Hitbox] {name}: layer missing, add the Hitbox layer in Project Settings > Tags and Layers", this);
+                return;
+            }
+            gameObject.layer = layer;
+            if (_renderer != null)
+            {
+                _renderer.enabled = !isLocalPlayer;
+            }
         }
 
         // Turn the collider on or off, PlayerCombat calls it when the player spawns or dies
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public void SetEnabled(bool enabled)
         {
+            if (_collider != null)
+            {
+                _collider.enabled = enabled;
+            }
         }
 
         // The vest takes the player's colour every frame (the colour can arrive a moment after spawning)
         // Skip if there is no renderer (the head) or it is hidden (your own vest)
         // _profile.Color with a little transparency (alpha 0.8), set with _block on _BaseColor
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void LateUpdate()
         {
+            if (_renderer == null || !_renderer.enabled || _profile == null)
+            {
+                return;
+            }
+            Color color = _profile.Color;
+            color.a = 0.8f;
+            _renderer.GetPropertyBlock(_block);
+            _block.SetColor("_BaseColor", color);
+            _renderer.SetPropertyBlock(_block);
         }
     }
 }

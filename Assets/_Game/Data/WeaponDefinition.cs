@@ -32,7 +32,7 @@ namespace Game
     public class WeaponDefinition : ScriptableObject
     {
         [Header("Damage")]
-        [Tooltip("Damage to the torso: 25")]
+        [Tooltip("Damage to the vest (body): 25")]
         [SerializeField, Range(1f, 100f)] private float _bodyDamage = 25f;
 
         [Tooltip("Damage to the head: 50, must stay below max HP so a headshot never kills from full")]
@@ -67,18 +67,33 @@ namespace Game
         public float EnergyRegenDelay { get { return _energyRegenDelay; } }
 
         // Energy one shot costs, worked out so a full bar gives exactly ShotsPerFullBar shots
-        // TODO(Joseph): MaxEnergy / ShotsPerFullBar
+        // TODO(Joseph) [X] Completed
         public float CostPerShot
         {
-            get { return 0f; }
+            get
+            {
+                if (_shotsPerFullBar <= 0)
+                {
+                    return _maxEnergy;
+                }
+                return _maxEnergy / _shotsPerFullBar;
+            }
         }
 
         // Unity calls this in the editor whenever a value changes, never during the game
         // Warn if headDamage is below bodyDamage, or shotsPerFullBar is 0
         // The "headDamage below max HP" check lives in MatchSettings, it knows both numbers
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void OnValidate()
         {
+            if (_headDamage < _bodyDamage)
+            {
+                Debug.LogWarning($"[Weapon] {name}: head damage ({_headDamage}) is below body damage ({_bodyDamage})", this);
+            }
+            if (_shotsPerFullBar <= 0)
+            {
+                Debug.LogWarning($"[Weapon] {name}: shots per full bar must be at least 1", this);
+            }
         }
     }
 }

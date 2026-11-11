@@ -26,17 +26,24 @@ namespace Game
 
         // Called by MapBuilder right after making the pad
         // Store coord and spawnRank, name the object "Pad (x,Llevel,z)" using coord.ToString()
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public void Init(GridCoord coord, int spawnRank)
         {
+            _coord = coord;
+            _spawnRank = spawnRank;
+            gameObject.name = $"Pad {coord}";
         }
 
 #if UNITY_EDITOR
         // Editor only: draws "Spawn N" above spawn pads in the Scene view
         // If spawnRank is above 0: UnityEditor.Handles.Label(position + 0.5 m up, "Spawn " + spawnRank)
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void OnDrawGizmos()
         {
+            if (_spawnRank > 0)
+            {
+                UnityEditor.Handles.Label(transform.position + Vector3.up * 0.5f, "Spawn " + _spawnRank);
+            }
         }
 #endif
     }

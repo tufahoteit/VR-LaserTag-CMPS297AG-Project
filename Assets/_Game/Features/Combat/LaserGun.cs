@@ -90,6 +90,8 @@ namespace Game
         private PlayerCombat _combat;
         private AudioSource _audio;
         private double _beamHideTime;
+        private Vector3 _stripFullScale;
+        private MaterialPropertyBlock _block;
 
         // Owner only
         private LaserEnergyCharging _gun;
@@ -99,15 +101,57 @@ namespace Game
         // Owner only: create LaserEnergyCharging from _settings.Weapon (MaxEnergy, CostPerShot, EnergyRegenPerSecond,
         //   EnergyRegenDelay, MinShotGap), enable _fireAction,
         //   subscribe to _combat.IsAlive changes: false to true is a respawn, Reset the energy and write Energy
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public override void OnNetworkSpawn()
         {
+            _combat = GetComponentInParent<PlayerCombat>();
+            _audio = GetComponent<AudioSource>();
+            _block = new MaterialPropertyBlock();
+            if (_energyStrip != null)
+            {
+                _stripFullScale = _energyStrip.localScale;
+            }
+            if (_beam != null)
+            {
+                _beam.useWorldSpace = true;
+                _beam.enabled = false;
+            }
+            GameEvents.ShotFired += OnShotFired;
+
+            if (IsOwner)
+            {
+                WeaponDefinition weapon = _settings.Weapon;
+                _gun = new LaserEnergyCharging(weapon.MaxEnergy, weapon.CostPerShot, weapon.EnergyRegenPerSecond,
+                                               weapon.EnergyRegenDelay, weapon.MinShotGap);
+                _gun.Reset();
+                _energy.Value = _gun.Energy;
+                if (_fireAction != null)
+                {
+                    _fireAction.action.Enable();
+                }
+                if (_combat != null)
+                {
+                    _combat.IsAlive.OnValueChanged += OnAliveChanged;
+                }
+            }
         }
 
         // Unsubscribe everything, disable _fireAction on the owner
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         public override void OnNetworkDespawn()
         {
+            GameEvents.ShotFired -= OnShotFired;
+            if (IsOwner)
+            {
+                if (_fireAction != null)
+                {
+                    _fireAction.action.Disable();
+                }
+                if (_combat != null)
+                {
+                    _combat.IsAlive.OnValueChanged -= OnAliveChanged;
+                }
+            }
         }
 
         // Owner only:
@@ -116,9 +160,31 @@ namespace Game
         //   _combat.IsAlive and now - _pressTime is at most PressBufferSeconds: TryFire
         // Everyone: UpdateEnergyStrip, hide the beam once _beamHideTime has passed
         // LateUpdate, not Update: the hand has already moved this frame (see "When it fires")
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void LateUpdate()
         {
+            double now = Time.timeAsDouble;
+            if (IsSpawned && IsOwner && _gun != null)
+            {
+                if (_gun.Tick(now, Time.deltaTime))
+                {
+                    _energy.Value = _gun.Energy;
+                }
+                if (_fireAction != null && _fireAction.action.WasPressedThisFrame())
+                {
+                    _pressTime = now;
+                }
+                if (_combat != null && _combat.IsAlive.Value && now - _pressTime <= PressBufferSeconds)
+                {
+                    TryFire();
+                }
+            }
+
+            UpdateEnergyStrip();
+            if (_beam != null && _beam.enabled && now >= _beamHideTime)
+            {
+                _beam.enabled = false;
+            }
         }
 
         // Steps 2 to 5 from the header, in this order
@@ -126,9 +192,38 @@ namespace Game
         //   IsMuzzleInWall: empty click, log it in the editor, clear _pressTime
         //   _gun.TryFire(now) refused (not enough energy): empty click, clear _pressTime
         //   otherwise: write Energy, FindHit, RaiseShotFired, ReportShotRpc, clear _pressTime
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void TryFire()
         {
+            double now = Time.timeAsDouble;
+            if (now - _gun.LastShotTime < _gun.MinShotGap)
+            {
+                return;
+            }
+            if (IsMuzzleInWall())
+            {
+                PlayEmptyClick();
+            #if UNITY_EDITOR
+                Debug.Log("[LaserGun] Shot blocked: a wall is between your eyes and the muzzle");
+            #endif
+                _pressTime = double.NegativeInfinity;
+                return;
+            }
+            if (!_gun.TryFire(now))
+            {
+                PlayEmptyClick();
+                _pressTime = double.NegativeInfinity;
+                return;
+            }
+
+            _energy.Value = _gun.Energy;
+            Vector3 origin = _muzzle.position;
+            FindHit(out Vector3 hitPoint, out ulong victimClientId, out bool headshot);
+            bool hitSomething = victimClientId != PlayerCombat.NoVictim
+                                || Vector3.Distance(origin, hitPoint) < _settings.Weapon.ShotRange - 0.01f;
+            GameEvents.RaiseShotFired(OwnerClientId, origin, hitPoint, hitSomething);
+            _combat.ReportShotRpc(origin, hitPoint, victimClientId, headshot);
+            _pressTime = double.NegativeInfinity;
         }
 
         // True if a wall is between your eyes and the muzzle, or your head is inside a wall
@@ -136,10 +231,16 @@ namespace Game
         //   or LocalRig.Instance.IsHeadInsideGeometry()
         // We need to make sure both are checked: a Linecast that starts inside a wall doesn't see that wall,
         // so with your head in a wall and the gun on the other side, the line alone would let you fire blind through it
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private bool IsMuzzleInWall()
         {
-            return false;
+            if (LocalRig.Instance == null || LocalRig.Instance.Head == null)
+            {
+                return false;
+            }
+            bool wallBetween = Physics.Linecast(LocalRig.Instance.Head.position, _muzzle.position, Layers.CoverMask,
+                                                QueryTriggerInteraction.Ignore);
+            return wallBetween || LocalRig.Instance.IsHeadInsideGeometry();
         }
 
         // Step 4: Physics.Raycast(muzzle position, muzzle forward, ShotRange, Layers.ShotMask, QueryTriggerInteraction.Collide)
@@ -147,26 +248,91 @@ namespace Game
         //   hit a Hitbox: victimClientId = its Player.OwnerClientId, headshot = its IsHead
         //   hit a wall: victimClientId = PlayerCombat.NoVictim
         //   hit nothing: hitPoint = muzzle + forward * ShotRange, victimClientId = PlayerCombat.NoVictim
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void FindHit(out Vector3 hitPoint, out ulong victimClientId, out bool headshot)
         {
-            hitPoint = default;
+            Vector3 origin = _muzzle.position;
+            Vector3 forward = _muzzle.forward;
+            float range = _settings.Weapon.ShotRange;
             victimClientId = PlayerCombat.NoVictim;
             headshot = false;
+
+            RaycastHit hit;
+            if (Physics.Raycast(origin, forward, out hit, range, Layers.ShotMask, QueryTriggerInteraction.Collide))
+            {
+                hitPoint = hit.point;
+                Hitbox hitbox = hit.collider.GetComponent<Hitbox>();
+                if (hitbox != null && hitbox.Player != null)
+                {
+                    victimClientId = hitbox.Player.OwnerClientId;
+                    headshot = hitbox.IsHead;
+                }
+            }
+            else
+            {
+                hitPoint = origin + forward * range;
+            }
         }
 
         // Listener for GameEvents.ShotFired (runs by itself on every shot, on every headset, connected in OnNetworkSpawn)
         // Only for this gun's own player (shooter == OwnerClientId): beam from -> to in the player's colour
         // (PlayerProfile.Color), _beamHideTime = now + BeamSeconds
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void OnShotFired(ulong shooter, Vector3 from, Vector3 to, bool hitSomething)
         {
+            if (shooter != OwnerClientId || _beam == null)
+            {
+                return;
+            }
+            PlayerProfile profile = PlayerProfile.Get(OwnerClientId);
+            Color color = profile != null ? profile.Color : Color.white;
+            _beam.positionCount = 2;
+            _beam.SetPosition(0, from);
+            _beam.SetPosition(1, to);
+            _beam.startColor = color;
+            _beam.endColor = color;
+            _beam.enabled = true;
+            _beamHideTime = Time.timeAsDouble + BeamSeconds;
+        }
+
+        // Owner only, listener for IsAlive changes: false to true is a respawn, the energy refills
+        private void OnAliveChanged(bool previous, bool current)
+        {
+            if (!previous && current && _gun != null)
+            {
+                _gun.Reset();
+                _energy.Value = _gun.Energy;
+                _pressTime = double.NegativeInfinity;
+            }
+        }
+
+        private void PlayEmptyClick()
+        {
+            if (_audio != null && _emptyClick != null)
+            {
+                _audio.PlayOneShot(_emptyClick);
+            }
         }
 
         // Scale the strip's length by Energy / MaxEnergy, colour from green (full) to red (empty)
-        // TODO(Joseph)
+        // TODO(Joseph) [X] Completed
         private void UpdateEnergyStrip()
         {
+            if (!IsSpawned || _energyStrip == null || _block == null || _settings == null || _settings.Weapon == null)
+            {
+                return;
+            }
+            float maxEnergy = _settings.Weapon.MaxEnergy;
+            float fraction = maxEnergy > 0f ? Mathf.Clamp01(_energy.Value / maxEnergy) : 0f;
+            _energyStrip.localScale = new Vector3(_stripFullScale.x, _stripFullScale.y, _stripFullScale.z * fraction);
+
+            Renderer strip = _energyStrip.GetComponent<Renderer>();
+            if (strip != null)
+            {
+                strip.GetPropertyBlock(_block);
+                _block.SetColor("_BaseColor", Color.Lerp(Color.red, Color.green, fraction));
+                strip.SetPropertyBlock(_block);
+            }
         }
     }
 }

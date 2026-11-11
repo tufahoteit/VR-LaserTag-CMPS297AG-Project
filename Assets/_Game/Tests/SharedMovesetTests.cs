@@ -18,34 +18,73 @@ public class SharedMovesetTests
     // Shared rules (Joseph), each test runs all three movesets
 
     // Mark a target pad occupied: it disappears from every moveset's list
-    // TODO(Joseph)
+    // TODO(Joseph) [X] Completed
     [Test]
     public void AllMovesets_ExcludeOccupiedPads()
     {
-        Assert.Inconclusive("TODO(Joseph)");
+        GridCoord start = new GridCoord(2, 1, 2);
+        foreach (IMoveset moveset in TestMaps.AllMovesets())
+        {
+            List<GridCoord> open = moveset.GetReachable(start, TestMaps.OpenMap(), TestMaps.Nobody);
+            Assert.IsNotEmpty(open, moveset.Kind + " reaches nothing on the open map");
+            GridCoord taken = open[0];
+            List<GridCoord> list = moveset.GetReachable(start, TestMaps.OpenMap(), coord => coord == taken);
+            Assert.IsFalse(list.Contains(taken), moveset.Kind + " still lists an occupied pad");
+        }
     }
 
     // Make a target cell Empty or Solid: it disappears from every moveset's list
-    // TODO(Joseph)
+    // TODO(Joseph) [X] Completed
     [Test]
     public void AllMovesets_ExcludeNonPadCells()
     {
-        Assert.Inconclusive("TODO(Joseph)");
+        GridCoord start = new GridCoord(2, 1, 2);
+        foreach (IMoveset moveset in TestMaps.AllMovesets())
+        {
+            List<GridCoord> open = moveset.GetReachable(start, TestMaps.OpenMap(), TestMaps.Nobody);
+            GridCoord emptyTarget = open[0];
+            GridCoord solidTarget = open[open.Count - 1];
+
+            MapLayout map = TestMaps.OpenMap();
+            map.EditCell(emptyTarget).kind = CellKind.Empty;
+            map.EditCell(solidTarget).kind = CellKind.Solid;
+            List<GridCoord> list = moveset.GetReachable(start, map, TestMaps.Nobody);
+            Assert.IsFalse(list.Contains(emptyTarget), moveset.Kind + " lists an Empty cell");
+            Assert.IsFalse(list.Contains(solidTarget), moveset.Kind + " lists a Solid cell");
+        }
     }
 
     // The start pad is never in any moveset's list
-    // TODO(Joseph)
+    // TODO(Joseph) [X] Completed
     [Test]
     public void AllMovesets_NeverIncludeStartPad()
     {
-        Assert.Inconclusive("TODO(Joseph)");
+        GridCoord start = new GridCoord(2, 1, 2);
+        foreach (IMoveset moveset in TestMaps.AllMovesets())
+        {
+            Assert.IsFalse(moveset.GetReachable(start, TestMaps.OpenMap(), TestMaps.Nobody).Contains(start), moveset.Kind + " lists the start pad");
+        }
     }
 
     // Put Solid walls and floors everywhere: every list is exactly the same as on the open map
-    // TODO(Joseph)
+    // TODO(Joseph) [X] Completed
     [Test]
     public void AllMovesets_IgnoreWallsAndFloors()
     {
-        Assert.Inconclusive("TODO(Joseph)");
+        GridCoord start = new GridCoord(2, 1, 2);
+        MapLayout walled = TestMaps.OpenMap();
+        for (int i = 0; i < walled.CellCount; i++)
+        {
+            Cell cell = walled.EditCell(walled.CoordOf(i));
+            cell.storedNorth = SideKind.Solid;
+            cell.storedEast = SideKind.Solid;
+            cell.storedFloor = FloorKind.Solid;
+        }
+        foreach (IMoveset moveset in TestMaps.AllMovesets())
+        {
+            List<GridCoord> open = moveset.GetReachable(start, TestMaps.OpenMap(), TestMaps.Nobody);
+            List<GridCoord> withWalls = moveset.GetReachable(start, walled, TestMaps.Nobody);
+            CollectionAssert.AreEquivalent(open, withWalls, moveset.Kind + " is blocked by walls or floors");
+        }
     }
 }
