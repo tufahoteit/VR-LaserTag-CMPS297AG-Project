@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.CharacterDefinition
   _displayName: Cluster
   _moveset: 0
-  _maxCharges: 6
+  _maxCharges: 3
   _rechargeSeconds: 4.5
   _description: 'Close range: the 8 pads right next to you and your own column, one level up or down'

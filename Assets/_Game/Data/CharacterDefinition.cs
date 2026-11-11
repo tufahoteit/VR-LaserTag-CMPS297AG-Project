@@ -22,8 +22,8 @@
 //   1. In the Project window, open Assets/_Game/Data and create a folder called Characters
 //   2. Right-click inside it, Create, Game, Character, name the new asset Ray
 //   3. Click Ray and fill it in the Inspector: Display Name Ray, Moveset Ray, Max Charges 3, Recharge Seconds 4.5
-//   4. Repeat for Cluster: Display Name Cluster, Moveset Cluster, Max Charges 6, Recharge Seconds 4.5
-//   5. Repeat for Ring: Display Name Ring, Moveset Ring, Max Charges 4, Recharge Seconds 4.5
+//   4. Repeat for Cluster: Display Name Cluster, Moveset Cluster, Max Charges 3, Recharge Seconds 4.5
+//   5. Repeat for Ring: Display Name Ring, Moveset Ring, Max Charges 3, Recharge Seconds 4.5
 //   6. Click DefaultMatch and drag Ray, Cluster, Ring into its Characters list, in that order
 //      (the order is the order in the character picker)
 
@@ -41,7 +41,7 @@ namespace Game
         [Tooltip("Which movement pattern this character uses")]
         [SerializeField] private MovesetKind _moveset = MovesetKind.Ray;
 
-        [Tooltip("Teleport charges when full: Ray 3, Cluster 6, Ring 4")]
+        [Tooltip("Teleport charges when full: 3 for every character")]
         [SerializeField, Range(1, 10)] private int _maxCharges = 3;
 
         [Tooltip("Seconds to get one charge back: 4.5 for every character")]

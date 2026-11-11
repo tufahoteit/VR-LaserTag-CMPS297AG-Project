@@ -2,7 +2,7 @@
 // Owner: Joe
 // Layer: Core, pure C#, no Unity
 //
-// Cluster: close range, 6 charges (set in Cluster.asset)
+// Cluster: close range, 3 charges (set in Cluster.asset)
 // Best instant combat: someone is behind the wall next to you, one jump left or one level up and you have an angle
 // Worst at crossing the map: one pad at a time
 //

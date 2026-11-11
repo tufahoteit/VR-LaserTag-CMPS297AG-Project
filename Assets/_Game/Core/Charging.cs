@@ -34,7 +34,7 @@ using System;
 namespace Game.Core
 {
     // Teleport charges
-    // Max charges are set per character (Ray 3, Cluster 6, Ring 4)
+    // Max charges are set per character (3 for every character)
     public class TeleportCharging
     {
         public int MaxCharges { get; }

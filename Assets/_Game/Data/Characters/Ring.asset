@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.CharacterDefinition
   _displayName: Ring
   _moveset: 1
-  _maxCharges: 4
+  _maxCharges: 3
   _rechargeSeconds: 4.5
   _description: 'Mid range: every pad exactly 2 away and your own column, one level up or down'

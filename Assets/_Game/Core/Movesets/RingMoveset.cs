@@ -2,7 +2,7 @@
 // Owner: Karim
 // Layer: Core, pure C#, no Unity
 //
-// Ring: mid range, charges set in Ring.asset (around 4)
+// Ring: mid range, 3 charges (set in Ring.asset)
 // Flanker: always pops up at a new angle, but can't make small moves next to you
 //
 // Own column
