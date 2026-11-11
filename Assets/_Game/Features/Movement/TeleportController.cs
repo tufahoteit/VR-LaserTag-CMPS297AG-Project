@@ -164,6 +164,13 @@ namespace Game
         {
         }
 
+        // The host confirmed one of your teleports (PlayerMovement sees your CurrentPad change on your headset)
+        // _pendingRequests - 1, never below 0, so the charge lights stop counting that request
+        // TODO(Moustafa)
+        public void OnTeleportConfirmed()
+        {
+        }
+
         // The host spawned you: LocalRig.TeleportTo(pad), LocalRig.FaceTowards(arena centre), PredictedPad = pad, _pendingRequests = 0
         // Arena centre = halfway between map.GridToWorld((0, level, 0)) and map.GridToWorld((width - 1, level, depth - 1)) at your level
         // TODO(Moustafa)
