@@ -29,6 +29,8 @@
 //   TeleportCharging: the host passes the network server time, so your board fills in step with the host
 //   LaserEnergyCharging: the shooter's headset passes its own clock, the gun never compares times with another headset
 
+using System;
+
 namespace Game.Core
 {
     // Teleport charges
@@ -56,9 +58,11 @@ namespace Game.Core
         }
 
         // On spawn: full charges, the recharge timer starts at now
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public void Reset(double now)
         {
+            Charges = MaxCharges;
+            RechargeStartTime = now;
         }
 
         // Called every frame on the host
@@ -68,42 +72,74 @@ namespace Game.Core
         // At MaxCharges: RechargeStartTime = now, so the next recharge starts fresh after a teleport
         // Returns true if Charges changed, so the host knows to sync it
         // We need to make sure a long pause gives several charges at once (a loop, not a single if), but never more than MaxCharges
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public bool Tick(double now)
         {
-            return false;
+            bool changed = false;
+            while (Charges < MaxCharges && RechargeSeconds > 0f && now - RechargeStartTime >= RechargeSeconds)
+            {
+                Charges++;
+                RechargeStartTime += RechargeSeconds;
+                changed = true;
+            }
+            if (Charges >= MaxCharges)
+            {
+                RechargeStartTime = now;
+            }
+            return changed;
         }
 
         // True if there is at least 1 charge and MinGapSeconds have passed since the last teleport
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public bool CanSpend(double now)
         {
-            return false;
+            return Charges >= 1 && now - LastTeleportTime >= MinGapSeconds;
         }
 
         // If CanSpend: Charges - 1, LastTeleportTime = now
         // If we were at MaxCharges before spending, the recharge starts now (RechargeStartTime = now)
         // Returns true if the charge was spent
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public bool TrySpend(double now)
         {
-            return false;
+            if (!CanSpend(now))
+            {
+                return false;
+            }
+            bool wasFull = Charges >= MaxCharges;
+            Charges--;
+            LastTeleportTime = now;
+            if (wasFull)
+            {
+                RechargeStartTime = now;
+            }
+            return true;
         }
 
         // Kill bonus: +1 charge, never above MaxCharges
         // The recharge progress keeps going, a kill doesn't reset it
         // Returns true if a charge was added, false if already full (the bonus is lost)
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public bool AddCharge()
         {
-            return false;
+            if (Charges >= MaxCharges)
+            {
+                return false;
+            }
+            Charges++;
+            return true;
         }
 
         // 0 to 1 progress toward the next charge, 1 when full, the HUD lights use it
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public float NextChargeProgress(double now)
         {
-            return 0f;
+            if (Charges >= MaxCharges || RechargeSeconds <= 0f)
+            {
+                return 1f;
+            }
+            double progress = (now - RechargeStartTime) / RechargeSeconds;
+            return (float)Math.Max(0.0, Math.Min(1.0, progress));
         }
     }
 
@@ -132,43 +168,66 @@ namespace Game.Core
         }
 
         // On spawn: full energy
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public void Reset()
         {
+            Energy = MaxEnergy;
         }
 
         // Called every frame on the shooter's own headset
         // If RegenDelay seconds have passed since the last shot: Energy + RegenPerSecond * deltaSeconds, never above MaxEnergy
         // Returns true if Energy changed
         // We need to make sure a full bar returns false, otherwise the host would sync it every frame for nothing
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public bool Tick(double now, float deltaSeconds)
         {
-            return false;
+            if (Energy >= MaxEnergy)
+            {
+                return false;
+            }
+            if (now - LastShotTime < RegenDelay)
+            {
+                return false;
+            }
+            Energy = Math.Min(MaxEnergy, Energy + RegenPerSecond * deltaSeconds);
+            return true;
         }
 
         // True if Energy is at least CostPerShot and MinShotGap has passed since the last shot
         // We need to make sure the energy check allows a tiny margin (Energy >= CostPerShot - 0.001)
         // 100 / 30 is not an exact decimal, after 29 shots the bar can be a hair below the cost and the 30th shot would fail
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public bool CanFire(double now)
         {
-            return false;
+            return Energy >= CostPerShot - 0.001f && now - LastShotTime >= MinShotGap;
         }
 
         // If CanFire: Energy - CostPerShot, LastShotTime = now, return true
         // Otherwise nothing changes and it returns false (the gun clicks empty)
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public bool TryFire(double now)
         {
-            return false;
+            if (!CanFire(now))
+            {
+                return false;
+            }
+            Energy = Math.Max(0f, Energy - CostPerShot);
+            LastShotTime = now;
+            return true;
         }
 
         // 0 to 1 for the energy bar on the gun
-        // TODO(Ali)
+        // TODO(Ali) [X] Completed
         public float Fraction
         {
-            get { return 0f; }
+            get
+            {
+                if (MaxEnergy <= 0f)
+                {
+                    return 0f;
+                }
+                return Energy / MaxEnergy;
+            }
         }
     }
 }
