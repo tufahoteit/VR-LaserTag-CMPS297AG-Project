@@ -47,6 +47,7 @@ namespace Game
         [SerializeField] private TMP_Text _statusText;
 
         private static readonly Color SelectedColor = new Color(0.3f, 0.9f, 1f, 1f);
+        private static readonly Color UnselectedColor = new Color(0.25f, 0.3f, 0.38f, 1f);   // dark, so the white labels stay readable
 
         // Connect the buttons: Start -> OnStartPressed, Height -> OnHeightPressed, character i -> OnCharacterPressed(i)
         // We need to make sure each character button passes its own index (copy i into a local before the lambda)
@@ -108,7 +109,7 @@ namespace Game
                 Image background = _characterButtons[i].targetGraphic as Image;
                 if (background != null)
                 {
-                    background.color = connected && me.CharacterIndex.Value == i ? SelectedColor : Color.white;
+                    background.color = connected && me.CharacterIndex.Value == i ? SelectedColor : UnselectedColor;
                 }
             }
 

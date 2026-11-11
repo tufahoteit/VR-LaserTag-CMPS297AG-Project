@@ -73,6 +73,12 @@ namespace Game
         [Tooltip("Where you stand while dead or waiting, in the lobby area")]
         [SerializeField] private Transform _lobbyAreaPoint;
 
+        [Tooltip("Your lobby panel, moved to the front left of your own lobby spot (local to your headset)")]
+        [SerializeField] private Transform _lobbyPanels;
+
+        [Tooltip("The template's room code sign, moved to the front right of your own lobby spot (local to your headset)")]
+        [SerializeField] private Transform _roomCodeSign;
+
         [Tooltip("Largest angle (degrees) between your pointing and a marker for it to be picked")]
         [SerializeField, Range(2f, 20f)] private float _maxSelectAngle = 8f;
 
@@ -95,6 +101,17 @@ namespace Game
         private double _lastTeleportTime = double.NegativeInfinity;
         private int _pendingRequests;
         private bool _wasAiming;     // aiming last frame, to see when it starts and ends
+        private bool _placedInLobby; // moved to your own lobby spot once after joining
+        private int _placedSlot = -1; // the colour slot of that spot, the host's value may arrive a frame later
+
+        // Lobby spots: one per colour slot (0 to 4) in a row, so players never stand inside each other
+        private const float LobbySpotSpacing = 1f;
+        // Where your lobby panels float: in front of your spot, the panel to the left and the room code to the right,
+        // so the middle stays free for the template's own menus further away
+        private const float LobbyPanelDistance = 1.5f;
+        private const float LobbyPanelHeight = 1.4f;
+        private const float LobbyPanelSide = 0.8f;
+        private const float LobbyPanelTurn = 20f;
         private bool _aimCancelled;  // the grip cancelled this aim, nothing happens until the stick is released
 
         // Instance = this, find GhostMarkers on this object
@@ -144,6 +161,21 @@ namespace Game
         // TODO(Moustafa) [X] Completed
         private void Update()
         {
+            // Right after you join, move to your own lobby spot (the template starts everyone on the same spot)
+            // Again if your colour slot arrives a frame later, while you are still waiting in the lobby area
+            if (PlayerMovement.Local == null || PlayerProfile.Local == null)
+            {
+                _placedInLobby = false;
+                _placedSlot = -1;
+            }
+            else if (LocalRig.Instance != null && !PlayerMovement.Local.IsOnBoard
+                     && (!_placedInLobby || PlayerProfile.Local.ColorIndex.Value != _placedSlot))
+            {
+                _placedInLobby = true;
+                _placedSlot = PlayerProfile.Local.ColorIndex.Value;
+                GoToLobbyArea();
+            }
+
             if (_aimAction == null || PlayerMovement.Local == null || LocalRig.Instance == null)
             {
                 return;
@@ -355,8 +387,31 @@ namespace Game
             }
             if (LocalRig.Instance != null && _lobbyAreaPoint != null)
             {
-                LocalRig.Instance.TeleportTo(_lobbyAreaPoint.position);
+                Vector3 spot = LobbySpot();
+                LocalRig.Instance.TeleportTo(spot);
+                LocalRig.Instance.FaceTowards(spot + _lobbyAreaPoint.forward * 2f);
+                // Each headset has its own copy of the panels, so every player sees them in front of their own spot
+                Vector3 front = spot + _lobbyAreaPoint.forward * LobbyPanelDistance + Vector3.up * LobbyPanelHeight;
+                if (_lobbyPanels != null)
+                {
+                    _lobbyPanels.position = front - _lobbyAreaPoint.right * LobbyPanelSide;
+                    _lobbyPanels.rotation = _lobbyAreaPoint.rotation * Quaternion.Euler(0f, -LobbyPanelTurn, 0f);
+                }
+                if (_roomCodeSign != null)
+                {
+                    _roomCodeSign.position = front + _lobbyAreaPoint.right * LobbyPanelSide;
+                    _roomCodeSign.rotation = _lobbyAreaPoint.rotation * Quaternion.Euler(0f, LobbyPanelTurn, 0f);
+                }
             }
+        }
+
+        // Your own spot in the lobby: in a row along the lobby point's right, LobbySpotSpacing apart, by colour slot (0 to 4)
+        // Slot 2 stands on the lobby point itself, the others to its left and right
+        // TODO(Moustafa) [X] Completed
+        private Vector3 LobbySpot()
+        {
+            int slot = PlayerProfile.Local != null ? PlayerProfile.Local.ColorIndex.Value : 2;
+            return _lobbyAreaPoint.position + _lobbyAreaPoint.right * ((slot - 2) * LobbySpotSpacing);
         }
     }
 }
