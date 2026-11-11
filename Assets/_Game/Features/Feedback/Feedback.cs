@@ -88,29 +88,73 @@ namespace Game
         private int _lastBeepSecond;
 
         // Make the flat AudioSource (Spatial Blend 0) and the pool of 3D AudioSources with the settings above
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void Awake()
         {
+            _flatSource = gameObject.AddComponent<AudioSource>();
+            _flatSource.spatialBlend = 0f;
+            _flatSource.playOnAwake = false;
+
+            for (int i = 0; i < PoolSize; i++)
+            {
+                GameObject holder = new GameObject("Sound 3D " + i);
+                holder.transform.SetParent(transform, false);
+                AudioSource source = holder.AddComponent<AudioSource>();
+                source.spatialBlend = 1f;
+                source.minDistance = MinDistance;
+                source.maxDistance = MaxDistance;
+                source.rolloffMode = AudioRolloffMode.Linear;
+                source.dopplerLevel = 0f;
+                source.playOnAwake = false;
+                _pool.Add(source);
+            }
         }
 
         // Subscribe to GameEvents: PlayerTeleported, PlayerSpawned, ShotFired, PlayerDamaged, PlayerKilled,
         // ChargeGained, TeleportDenied, MatchPhaseChanged
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnEnable()
         {
+            GameEvents.PlayerTeleported += OnPlayerTeleported;
+            GameEvents.PlayerSpawned += OnPlayerSpawned;
+            GameEvents.ShotFired += OnShotFired;
+            GameEvents.PlayerDamaged += OnPlayerDamaged;
+            GameEvents.PlayerKilled += OnPlayerKilled;
+            GameEvents.ChargeGained += OnChargeGained;
+            GameEvents.TeleportDenied += OnTeleportDenied;
+            GameEvents.MatchPhaseChanged += OnMatchPhaseChanged;
         }
 
         // Unsubscribe everything from OnEnable
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnDisable()
         {
+            GameEvents.PlayerTeleported -= OnPlayerTeleported;
+            GameEvents.PlayerSpawned -= OnPlayerSpawned;
+            GameEvents.ShotFired -= OnShotFired;
+            GameEvents.PlayerDamaged -= OnPlayerDamaged;
+            GameEvents.PlayerKilled -= OnPlayerKilled;
+            GameEvents.ChargeGained -= OnChargeGained;
+            GameEvents.TeleportDenied -= OnTeleportDenied;
+            GameEvents.MatchPhaseChanged -= OnMatchPhaseChanged;
         }
 
         // Countdown beeps: while the phase is Countdown, play _countdownBeep once each time
         // MatchManager.SecondsLeft() goes below 3, 2 and 1 (_lastBeepSecond remembers which already played)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void Update()
         {
+            MatchManager match = MatchManager.Instance;
+            if (match == null || match.Phase.Value != MatchPhase.Countdown)
+            {
+                return;
+            }
+            int secondsLeft = Mathf.CeilToInt(match.SecondsLeft());
+            if (secondsLeft >= 1 && secondsLeft <= 3 && secondsLeft < _lastBeepSecond)
+            {
+                PlayFlat(_countdownBeep);
+                _lastBeepSecond = secondsLeft;
+            }
         }
 
         // Listeners
@@ -121,106 +165,217 @@ namespace Game
         // Your own teleport (clientId is you): PlayFlat(arrive)
         // Anyone else: Play3D(depart, old pad position), Play3D(arrive, new pad position)
         // Pad positions from MapBuilder.Instance.Map.PadWorldPosition
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnPlayerTeleported(ulong clientId, GridCoord from, GridCoord to)
         {
+            if (IsMe(clientId))
+            {
+                PlayFlat(_teleportArrive);
+                return;
+            }
+            if (MapBuilder.Instance == null)
+            {
+                return;
+            }
+            MapDefinition map = MapBuilder.Instance.Map;
+            Play3D(_teleportDepart, map.PadWorldPosition(from));
+            Play3D(_teleportArrive, map.PadWorldPosition(to));
         }
 
         // Listener for GameEvents.PlayerSpawned
         // You spawned: PlayFlat(spawn)
         // Anyone else: Play3D(spawn, pad position)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnPlayerSpawned(ulong clientId, GridCoord pad)
         {
+            if (IsMe(clientId))
+            {
+                PlayFlat(_spawn);
+            }
+            else if (MapBuilder.Instance != null)
+            {
+                Play3D(_spawn, MapBuilder.Instance.Map.PadWorldPosition(pad));
+            }
         }
 
         // Listener for GameEvents.ShotFired
         // Play3D(fire, from) for every shot
         // Your own shot also: Vibrate(right hand, light, short)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnShotFired(ulong shooter, Vector3 from, Vector3 to, bool hitSomething)
         {
+            Play3D(_laserFire, from);
+            if (IsMe(shooter))
+            {
+                Vibrate(XRNode.RightHand, 0.3f, 0.05f);
+            }
         }
 
         // Listener for GameEvents.PlayerDamaged
         // You are the attacker: PlayFlat(headshot ? hitHead : hitBody)
         // You are the victim: PlayFlat(hurt), Vibrate(both hands, strong)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnPlayerDamaged(ulong victim, ulong attacker, float newHp, bool headshot)
         {
+            if (IsMe(attacker) && !IsMe(victim))
+            {
+                PlayFlat(headshot ? _hitHead : _hitBody);
+            }
+            if (IsMe(victim))
+            {
+                PlayFlat(_hurt);
+                Vibrate(XRNode.LeftHand, 0.8f, 0.15f);
+                Vibrate(XRNode.RightHand, 0.8f, 0.15f);
+            }
         }
 
         // Listener for GameEvents.PlayerKilled
         // You are the killer: PlayFlat(killConfirm)
         // Everyone: Play3D(death, victim's head), ShowDeathBurst(victim's head, victim's colour)
         // The victim's head comes from PlayerCombat.Get(victim).Head, their colour from PlayerProfile.Get(victim).Color
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnPlayerKilled(ulong victim, ulong killer)
         {
+            if (IsMe(killer) && killer != victim)
+            {
+                PlayFlat(_killConfirm);
+            }
+
+            PlayerCombat victimCombat = PlayerCombat.Get(victim);
+            if (victimCombat == null || victimCombat.Head == null)
+            {
+                return;
+            }
+            Vector3 head = victimCombat.Head.position;
+            PlayerProfile profile = PlayerProfile.Get(victim);
+            Play3D(_death, head);
+            ShowDeathBurst(head, profile != null ? profile.Color : Color.white);
         }
 
         // Listener for GameEvents.ChargeGained
         // PlayFlat(chargeGained), only ever raised on your own headset
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnChargeGained(ulong clientId)
         {
+            PlayFlat(_chargeGained);
         }
 
         // Listener for GameEvents.TeleportDenied
         // PlayFlat(denied), TeleportController raises TeleportDenied when the host refused your teleport
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnTeleportDenied()
         {
+            PlayFlat(_teleportDenied);
         }
 
         // Listener for GameEvents.MatchPhaseChanged
         // Playing: PlayFlat(matchStart), Ended: PlayFlat(matchEnd), Countdown: _lastBeepSecond = 4 (ready for 3, 2, 1)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void OnMatchPhaseChanged(MatchPhase phase)
         {
+            switch (phase)
+            {
+                case MatchPhase.Countdown:
+                    _lastBeepSecond = 4;
+                    break;
+                case MatchPhase.Playing:
+                    PlayFlat(_matchStart);
+                    break;
+                case MatchPhase.Ended:
+                    PlayFlat(_matchEnd);
+                    break;
+            }
         }
 
         // Helpers
 
         // True if clientId is the player on this headset (NetworkManager.Singleton.LocalClientId)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private static bool IsMe(ulong clientId)
         {
-            return false;
+            return NetworkManager.Singleton != null && clientId == NetworkManager.Singleton.LocalClientId;
         }
 
         // Straight in your ears: _flatSource.PlayOneShot(clip)
         // We need to make sure a missing clip (null) is skipped, so an empty slot never crashes
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void PlayFlat(AudioClip clip)
         {
+            if (clip == null || _flatSource == null)
+            {
+                return;
+            }
+            _flatSource.PlayOneShot(clip);
         }
 
         // From a place in the arena: take the next AudioSource in the pool, move it to position, play clip
         // We need to make sure a missing clip (null) is skipped
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void Play3D(AudioClip clip, Vector3 position)
         {
+            if (clip == null || _pool.Count == 0)
+            {
+                return;
+            }
+            AudioSource source = _pool[_nextPoolIndex];
+            _nextPoolIndex = (_nextPoolIndex + 1) % _pool.Count;
+            source.transform.position = position;
+            source.clip = clip;
+            source.Play();
         }
 
         // Controller vibration: InputDevices.GetDeviceAtXRNode(node).SendHapticImpulse(0, amplitude, seconds)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private static void Vibrate(XRNode node, float amplitude, float seconds)
         {
+            InputDevice device = InputDevices.GetDeviceAtXRNode(node);
+            if (device.isValid)
+            {
+                device.SendHapticImpulse(0, amplitude, seconds);
+            }
         }
 
         // The "tagged out" effect: a sphere at position in color, grows to about 0.8 m and fades out over 0.3 s, then is destroyed
         // Built in code (CreatePrimitive, remove the collider, _burstMaterial tinted with a MaterialPropertyBlock)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void ShowDeathBurst(Vector3 position, Color color)
         {
+            GameObject burst = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            burst.name = "Death burst";
+            Destroy(burst.GetComponent<Collider>());
+            burst.transform.position = position;
+            burst.transform.localScale = Vector3.one * 0.2f;
+            Renderer renderer = burst.GetComponent<Renderer>();
+            if (_burstMaterial != null)
+            {
+                renderer.sharedMaterial = _burstMaterial;
+            }
+            StartCoroutine(DeathBurstRoutine(burst.transform, renderer, color));
         }
 
         // The grow-and-fade animation for one death burst
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private IEnumerator DeathBurstRoutine(Transform burst, Renderer renderer, Color color)
         {
-            yield break;
+            const float Duration = 0.3f;
+            MaterialPropertyBlock block = new MaterialPropertyBlock();
+            float elapsed = 0f;
+            while (elapsed < Duration && burst != null)
+            {
+                float k = elapsed / Duration;
+                burst.localScale = Vector3.one * Mathf.Lerp(0.2f, 0.8f, k);
+                Color faded = color;
+                faded.a = 1f - k;
+                renderer.GetPropertyBlock(block);
+                block.SetColor("_BaseColor", faded);
+                renderer.SetPropertyBlock(block);
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            if (burst != null)
+            {
+                Destroy(burst.gameObject);
+            }
         }
     }
 }

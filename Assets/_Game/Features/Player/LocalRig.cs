@@ -72,6 +72,9 @@ namespace Game
         private Transform _rightController;
         private Transform _cameraOffset;
         private Vector3 _padCenter;
+        private bool _hasPadCenter;  // false until the first TeleportTo, no leash before that
+        private float _fadeAlpha;
+        private MaterialPropertyBlock _block;
 
         public static LocalRig Instance { get; private set; }
 
@@ -83,57 +86,168 @@ namespace Game
         // Find everything: _origin = GetComponentInChildren<XROrigin>(), head = origin.Camera, cameraOffset = origin.CameraFloorOffsetObject,
         // the two controllers by name under the camera offset ("Left Controller", "Right Controller")
         // We need to make sure a missing object logs an error with its name, so a template rename is easy to spot
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void Awake()
         {
+            Instance = this;
+            _block = new MaterialPropertyBlock();
+
+            _origin = GetComponentInChildren<XROrigin>();
+            if (_origin == null)
+            {
+                Debug.LogError("[LocalRig] No XROrigin under this object (expected XR Origin (XR Rig))", this);
+                return;
+            }
+            if (_origin.Camera != null)
+            {
+                _head = _origin.Camera.transform;
+            }
+            else
+            {
+                Debug.LogError("[LocalRig] The XROrigin has no Camera", this);
+            }
+            if (_origin.CameraFloorOffsetObject != null)
+            {
+                _cameraOffset = _origin.CameraFloorOffsetObject.transform;
+                _leftController = FindChildByName(_cameraOffset, "Left Controller");
+                _rightController = FindChildByName(_cameraOffset, "Right Controller");
+            }
+            else
+            {
+                Debug.LogError("[LocalRig] The XROrigin has no Camera Offset", this);
+            }
+            if (_leftController == null)
+            {
+                Debug.LogError("[LocalRig] Left Controller not found under Camera Offset", this);
+            }
+            if (_rightController == null)
+            {
+                Debug.LogError("[LocalRig] Right Controller not found under Camera Offset", this);
+            }
         }
 
         // Moves you instantly onto a pad
         // Shift _origin.transform (XR Origin (XR Rig)) so your head (on the floor, ignoring height) ends up above feetPosition
         // Remember feetPosition as the new pad centre for the leash
         // Never rotates the rig: you keep facing the same way
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public void TeleportTo(Vector3 feetPosition)
         {
+            if (_origin == null || _head == null)
+            {
+                return;
+            }
+            Transform rig = _origin.transform;
+            Vector3 shift = new Vector3(feetPosition.x - _head.position.x,
+                                        feetPosition.y - rig.position.y,
+                                        feetPosition.z - _head.position.z);
+            rig.position += shift;
+            _padCenter = feetPosition;
+            _hasPadCenter = true;
         }
 
         // Spawn only: turns _origin.transform around your head so you face point (on the floor, ignoring height)
         // Never on normal teleports: turning a player mid-fight makes them lose track of enemies
         // A single instant turn when you arrive from the lobby area is comfortable, a turn you watch happen is not
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public void FaceTowards(Vector3 point)
         {
+            if (_origin == null || _head == null)
+            {
+                return;
+            }
+            Vector3 toPoint = point - _head.position;
+            toPoint.y = 0f;
+            Vector3 facing = _head.forward;
+            facing.y = 0f;
+            if (toPoint.sqrMagnitude < 0.0001f || facing.sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+            float turn = Vector3.SignedAngle(facing, toPoint, Vector3.up);
+            _origin.transform.RotateAround(_head.position, Vector3.up, turn);
         }
 
         // Stand up straight and press the button in the lobby area
         // Moves the Camera Offset so your eyes are at StandardEyeHeight (1.65 m)
         // offset y = 1.65 - your real eye height above the floor right now
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public void CalibrateHeight()
         {
+            if (_origin == null || _head == null || _cameraOffset == null)
+            {
+                return;
+            }
+            // The real eye height is what the headset tracks, without our current offset
+            float realEyeHeight = _head.position.y - _origin.transform.position.y - _cameraOffset.localPosition.y;
+            Vector3 offset = _cameraOffset.localPosition;
+            offset.y = _settings.StandardEyeHeight - realEyeHeight;
+            _cameraOffset.localPosition = offset;
         }
 
         // True if a small sphere at your head overlaps a wall (Layers.CoverMask)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public bool IsHeadInsideGeometry()
         {
-            return false;
+            if (_head == null)
+            {
+                return false;
+            }
+            return Physics.CheckSphere(_head.position, _headRadius, Layers.CoverMask, QueryTriggerInteraction.Ignore);
         }
 
         // How far your head is from the pad centre, on the floor (ignoring height)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public float LeashDistance()
         {
-            return 0f;
+            if (_head == null || !_hasPadCenter)
+            {
+                return 0f;
+            }
+            Vector3 fromCenter = _head.position - _padCenter;
+            fromCenter.y = 0f;
+            return fromCenter.magnitude;
+        }
+
+        // Depth-first search for a child with this exact name, null if none
+        private static Transform FindChildByName(Transform parent, string childName)
+        {
+            foreach (Transform child in parent)
+            {
+                if (child.name == childName)
+                {
+                    return child;
+                }
+                Transform found = FindChildByName(child, childName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            return null;
         }
 
         // Every frame: the fade alpha moves toward the darkest of:
         //   1 if the head is inside a wall
         //   0 inside the leash, rising to 1 between LeashRadius and LeashRadius + leashFadeWidth
         // Smoothly, at fadeSpeed
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void Update()
         {
+            if (_fadeRenderer == null)
+            {
+                return;
+            }
+
+            float wall = IsHeadInsideGeometry() ? 1f : 0f;
+            float leash = Mathf.InverseLerp(_settings.LeashRadius, _settings.LeashRadius + _leashFadeWidth, LeashDistance());
+            float target = Mathf.Max(wall, leash);
+            _fadeAlpha = Mathf.MoveTowards(_fadeAlpha, target, _fadeSpeed * Time.deltaTime);
+
+            _fadeRenderer.enabled = _fadeAlpha > 0.001f;
+            _fadeRenderer.GetPropertyBlock(_block);
+            _block.SetColor("_BaseColor", new Color(0f, 0f, 0f, _fadeAlpha));
+            _fadeRenderer.SetPropertyBlock(_block);
         }
     }
 }

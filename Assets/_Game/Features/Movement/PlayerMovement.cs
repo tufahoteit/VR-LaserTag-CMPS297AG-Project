@@ -93,22 +93,41 @@ namespace Game
         //   NoPad -> pad: RaisePlayerSpawned
         //   pad -> pad: RaisePlayerTeleported, except on the owner (its headset already raised it when it predicted the teleport)
         //   pad -> NoPad: nothing (PlayerKilled already covers death)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public override void OnNetworkSpawn()
         {
+            All.Add(this);
+            if (IsOwner)
+            {
+                Local = this;
+            }
+            _currentPad.OnValueChanged += OnCurrentPadChanged;
         }
 
         // Remove from All, clear Local, unsubscribe
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public override void OnNetworkDespawn()
         {
+            All.Remove(this);
+            if (Local == this)
+            {
+                Local = null;
+            }
+            _currentPad.OnValueChanged -= OnCurrentPadChanged;
         }
 
         // True if another player is standing on coord (their CurrentPad, players in the lobby area don't count)
         // Works on every headset, it only reads synced values, movesets use it as isOccupied
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public static bool IsOccupiedByOther(GridCoord coord, PlayerMovement except)
         {
+            foreach (PlayerMovement player in All)
+            {
+                if (player != except && player.IsOnBoard && player.CurrentGrid == coord)
+                {
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -116,10 +135,14 @@ namespace Game
         // moveset.GetReachable(from, map layout, coord => IsOccupiedByOther(coord, this))
         // TeleportController calls it with the predicted pad (markers), the host with the confirmed pad (the check)
         // Same function both times, so the markers and the host never disagree about the rules
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public List<GridCoord> GetReachablePads(GridCoord from)
         {
-            return new List<GridCoord>();
+            if (_moveset == null || MapBuilder.Instance == null || MapBuilder.Instance.Map == null)
+            {
+                return new List<GridCoord>();
+            }
+            return _moveset.GetReachable(from, MapBuilder.Instance.Map.Layout, IsTakenByOther);
         }
 
         // Your headset asks to teleport
@@ -129,78 +152,235 @@ namespace Game
         //   CurrentPad = target, PlayerCombat.ServerOnActed (ends spawn protection)
         //   otherwise: TeleportRejectedRpc(CurrentPad) to the owner only
         // InvokePermission Owner: only this player's own headset can ask to move this player
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestTeleportRpc(Vector3Int target)
         {
+            if (!IsOnBoard)
+            {
+                return;
+            }
+
+            GridCoord pad = target.ToGrid();
+            if (ServerCanTeleportTo(pad))
+            {
+                _charging.TrySpend(ServerNow);
+                SyncCharges();
+                _currentPad.Value = target;
+                PlayerCombat combat = GetComponent<PlayerCombat>();
+                if (combat != null)
+                {
+                    combat.ServerOnActed();
+                }
+            }
+            else
+            {
+                TeleportRejectedRpc(_currentPad.Value);
+            }
         }
 
         // Host check, in this order: on board, match is Playing, target in GetReachablePads(CurrentGrid),
         // _charging.CanSpend(server time)
         // Refuses with no message (VR mid-fight is no place for text), your headset snaps back and plays a "denied" sound
         // Logs the failed check in the editor
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private bool ServerCanTeleportTo(GridCoord target)
         {
-            return false;
+            string refusal = null;
+            if (!IsOnBoard)
+            {
+                refusal = "not on a pad";
+            }
+            else if (MatchManager.Instance != null && MatchManager.Instance.Phase.Value != MatchPhase.Playing)
+            {
+                refusal = "the match is not Playing";
+            }
+            else if (!GetReachablePads(CurrentGrid).Contains(target))
+            {
+                refusal = $"{target} is not reachable from {CurrentGrid} (or it is taken)";
+            }
+            else if (_charging == null || !_charging.CanSpend(ServerNow))
+            {
+                refusal = "no charge or the teleport gap hasn't passed";
+            }
+
+            if (refusal != null)
+            {
+            #if UNITY_EDITOR
+                Debug.Log($"[PlayerMovement] Teleport of client {OwnerClientId} refused: {refusal}");
+            #endif
+                return false;
+            }
+            return true;
         }
 
         // Owner only: the host refused, TeleportController.OnTeleportRejected(confirmedPad)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         [Rpc(SendTo.Owner)]
         private void TeleportRejectedRpc(Vector3Int confirmedPad)
         {
+            if (TeleportController.Instance != null)
+            {
+                TeleportController.Instance.OnTeleportRejected(confirmedPad.ToGrid());
+            }
         }
 
         // Owner only: the host spawned you on a pad
         // _moveset = PlayerProfile.Character.CreateMoveset() (for the markers), then TeleportController.PlaceAt(pad)
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         [Rpc(SendTo.Owner)]
         private void PlaceAtRpc(Vector3Int pad)
         {
+            CharacterDefinition character = CurrentCharacter();
+            _moveset = character != null ? character.CreateMoveset() : null;
+            if (TeleportController.Instance != null)
+            {
+                TeleportController.Instance.PlaceAt(pad.ToGrid());
+            }
         }
 
         // Owner only: you died or the match is over, TeleportController.GoToLobbyArea()
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         [Rpc(SendTo.Owner)]
         private void SendToLobbyAreaRpc()
         {
+            if (TeleportController.Instance != null)
+            {
+                TeleportController.Instance.GoToLobbyArea();
+            }
         }
 
         // Owner only: your kill gave you +1 charge, RaiseChargeGained (Feedback plays the chime)
         // Needed because the charge number alone can't tell a kill bonus from a normal recharge
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         [Rpc(SendTo.Owner)]
         private void ChargeGainedRpc()
         {
+            GameEvents.RaiseChargeGained(OwnerClientId);
+        }
+
+        // Helpers
+
+        private double ServerNow
+        {
+            get { return NetworkManager.ServerTime.Time; }
+        }
+
+        // Movesets ask "is this pad taken", here: by anyone but this player
+        private bool IsTakenByOther(GridCoord coord)
+        {
+            return IsOccupiedByOther(coord, this);
+        }
+
+        // The character from PlayerProfile, or the first one in the roster if the profile has none
+        private CharacterDefinition CurrentCharacter()
+        {
+            PlayerProfile profile = GetComponent<PlayerProfile>();
+            if (profile != null && profile.Character != null)
+            {
+                return profile.Character;
+            }
+            if (_settings != null && _settings.Characters != null && _settings.Characters.Length > 0)
+            {
+                return _settings.Characters[0];
+            }
+            return null;
+        }
+
+        // Host only: copy the charge state into the synced values
+        private void SyncCharges()
+        {
+            _charges.Value = _charging.Charges;
+            _rechargeStartTime.Value = _charging.RechargeStartTime;
+        }
+
+        // Listener for CurrentPad changes (every headset)
+        //   NoPad -> pad: spawned, pad -> pad: teleported (the owner already raised it when it predicted the move)
+        //   on the owner, pad -> pad is also the host's confirmation, so TeleportController stops counting that request
+        private void OnCurrentPadChanged(Vector3Int previous, Vector3Int current)
+        {
+            if (current == UnityConversions.NoPad)
+            {
+                return;
+            }
+            if (previous == UnityConversions.NoPad)
+            {
+                GameEvents.RaisePlayerSpawned(OwnerClientId, current.ToGrid());
+                return;
+            }
+            if (IsOwner)
+            {
+                if (TeleportController.Instance != null)
+                {
+                    TeleportController.Instance.OnTeleportConfirmed();
+                }
+            }
+            else
+            {
+                GameEvents.RaisePlayerTeleported(OwnerClientId, previous.ToGrid(), current.ToGrid());
+            }
         }
 
         // Host API, called by MatchManager and PlayerCombat
 
         // Spawn on a pad: read PlayerProfile.Character, make its moveset and a new TeleportCharging
         // (gap = MinTeleportGap - HostGapSlack), Reset to full, sync Charges and RechargeStartTime, CurrentPad = pad, PlaceAtRpc
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public void ServerPlaceAt(GridCoord pad)
         {
+            CharacterDefinition character = CurrentCharacter();
+            if (character == null)
+            {
+                Debug.LogError($"[PlayerMovement] Client {OwnerClientId} has no character, check DefaultMatch's Characters list", this);
+                return;
+            }
+
+            _moveset = character.CreateMoveset();
+            _charging = new TeleportCharging(character.MaxCharges, character.RechargeSeconds, _settings.MinTeleportGap - HostGapSlack);
+            _charging.Reset(ServerNow);
+            SyncCharges();
+
+            Vector3Int value = pad.ToVector3Int();
+            _currentPad.Value = value;
+            PlaceAtRpc(value);
         }
 
         // Died or the match ended: CurrentPad = NoPad, SendToLobbyAreaRpc
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public void ServerSendToLobbyArea()
         {
+            _currentPad.Value = UnityConversions.NoPad;
+            SendToLobbyAreaRpc();
         }
 
         // Kill bonus: _charging.AddCharge(), if it added one: sync Charges and ChargeGainedRpc
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public void ServerAddCharge()
         {
+            if (_charging == null)
+            {
+                return;
+            }
+            if (_charging.AddCharge())
+            {
+                SyncCharges();
+                ChargeGainedRpc();
+            }
         }
 
         // Host only, every frame: skip if _charging doesn't exist yet (before the first spawn),
         // otherwise _charging.Tick(server time), if it changed: sync Charges and RechargeStartTime
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         private void Update()
         {
+            if (!IsServer || !IsSpawned || _charging == null)
+            {
+                return;
+            }
+            if (_charging.Tick(ServerNow))
+            {
+                SyncCharges();
+            }
         }
     }
 }

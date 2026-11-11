@@ -36,10 +36,33 @@ namespace Game.Core
         //     skip target if it is the start pad
         //     add target if map.IsPad(target) and not isOccupied(target)
         // We need to make sure the start pad is skipped, the loop passes over it when dx, dz and the level change are all 0
-        // TODO(Joe)
+        // TODO(Joe) [X] Completed
         public List<GridCoord> GetReachable(GridCoord start, MapLayout map, Func<GridCoord, bool> isOccupied)
         {
-            return new List<GridCoord>();
+            List<GridCoord> result = new List<GridCoord>();
+            int lowest = Math.Max(0, start.level - MaxLevelChange);
+            int highest = Math.Min(map.levels - 1, start.level + MaxLevelChange);
+
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dz = -1; dz <= 1; dz++)
+                {
+                    for (int level = lowest; level <= highest; level++)
+                    {
+                        GridCoord target = new GridCoord(start.x + dx, level, start.z + dz);
+                        if (target == start)
+                        {
+                            continue;
+                        }
+                        if (map.IsPad(target) && !isOccupied(target))
+                        {
+                            result.Add(target);
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

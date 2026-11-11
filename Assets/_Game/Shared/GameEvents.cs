@@ -1,5 +1,5 @@
 // GameEvents.cs
-// Owner: Moustafa
+// Owner: Joe
 // Layer: Shared
 //
 // A local event hub, so features don't need to know about each other
@@ -55,59 +55,77 @@ namespace Game
         public static event Action<MatchPhase> MatchPhaseChanged;
 
         // Raise helpers, each one calls its event with ?.Invoke(...) so a missing listener never crashes
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaisePlayerKilled(ulong victim, ulong killer)
         {
+            PlayerKilled?.Invoke(victim, killer);
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaisePlayerSpawned(ulong clientId, GridCoord pad)
         {
+            PlayerSpawned?.Invoke(clientId, pad);
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaisePlayerTeleported(ulong clientId, GridCoord from, GridCoord to)
         {
+            PlayerTeleported?.Invoke(clientId, from, to);
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaiseShotFired(ulong shooter, Vector3 from, Vector3 to, bool hit)
         {
+            ShotFired?.Invoke(shooter, from, to, hit);
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaisePlayerDamaged(ulong victim, ulong attacker, float newHp, bool headshot)
         {
+            PlayerDamaged?.Invoke(victim, attacker, newHp, headshot);
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaiseChargeGained(ulong clientId)
         {
+            ChargeGained?.Invoke(clientId);
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaisePlayerLeft(ulong clientId)
         {
+            PlayerLeft?.Invoke(clientId);
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaiseTeleportDenied()
         {
+            TeleportDenied?.Invoke();
         }
 
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         public static void RaiseMatchPhaseChanged(MatchPhase phase)
         {
+            MatchPhaseChanged?.Invoke(phase);
         }
 
         // Clears every listener when play mode starts
         // Unity can keep static values between play sessions (when Domain Reload is off),
         // old listeners from the last session would then fire on destroyed objects
         // We need to make sure every event above is set to null here, a new event added later must be added here too
-        // TODO(Moustafa)
+        // TODO(Joe) [X] Completed
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
+            PlayerKilled = null;
+            PlayerSpawned = null;
+            PlayerTeleported = null;
+            ShotFired = null;
+            PlayerDamaged = null;
+            ChargeGained = null;
+            PlayerLeft = null;
+            TeleportDenied = null;
+            MatchPhaseChanged = null;
         }
     }
 }
