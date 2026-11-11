@@ -672,4 +672,4 @@ MonoBehaviour:
   _halfWallHeight: 1.2
   _windowBottom: 1.2
   _windowTop: 1.8
-  _windowWidth: 0.6
+  _windowWidth: 1
