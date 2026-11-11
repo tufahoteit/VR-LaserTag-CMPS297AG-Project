@@ -105,9 +105,31 @@ namespace Game
         // Unity calls this in the editor whenever a value changes, never during the game
         // Warn if: the roster is empty or has an empty slot, the weapon is missing,
         // the weapon's headDamage is at or above maxHp (a headshot would kill from full)
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void OnValidate()
         {
+            if (_characters == null || _characters.Length == 0)
+            {
+                Debug.LogWarning($"[MatchSettings] {name}: the character roster is empty", this);
+            }
+            else
+            {
+                for (int i = 0; i < _characters.Length; i++)
+                {
+                    if (_characters[i] == null)
+                    {
+                        Debug.LogWarning($"[MatchSettings] {name}: character slot {i} is empty", this);
+                    }
+                }
+            }
+            if (_weapon == null)
+            {
+                Debug.LogWarning($"[MatchSettings] {name}: no weapon assigned", this);
+            }
+            else if (_weapon.HeadDamage >= _maxHp)
+            {
+                Debug.LogWarning($"[MatchSettings] {name}: head damage ({_weapon.HeadDamage}) would kill from full HP ({_maxHp})", this);
+            }
         }
     }
 }

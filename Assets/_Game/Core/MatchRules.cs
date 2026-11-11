@@ -66,11 +66,57 @@ namespace Game.Core
         //   otherwise: not ended
         // We need to make sure a tie never ends the match, that rule alone is what makes sudden death work
         // MatchManager calls this every frame while Playing
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         public static MatchResult CheckWin(IReadOnlyDictionary<ulong, int> kills, int killsToWin,
                                            double now, double endTime, double lastKillTime, float tradeWindow)
         {
-            return new MatchResult();
+            MatchResult notEnded = new MatchResult();
+            notEnded.endKind = MatchEndKind.NotEnded;
+
+            if (now - lastKillTime <= tradeWindow)
+            {
+                return notEnded;
+            }
+            if (kills == null || kills.Count == 0)
+            {
+                return notEnded;
+            }
+
+            int best = int.MinValue;
+            int playersOnBest = 0;
+            ulong leader = 0;
+            foreach (KeyValuePair<ulong, int> entry in kills)
+            {
+                if (entry.Value > best)
+                {
+                    best = entry.Value;
+                    playersOnBest = 1;
+                    leader = entry.Key;
+                }
+                else if (entry.Value == best)
+                {
+                    playersOnBest++;
+                }
+            }
+
+            if (playersOnBest > 1)
+            {
+                return notEnded;
+            }
+
+            MatchResult result = new MatchResult();
+            result.winnerClientId = leader;
+            if (best >= killsToWin)
+            {
+                result.endKind = MatchEndKind.KillLimit;
+                return result;
+            }
+            if (now >= endTime)
+            {
+                result.endKind = lastKillTime < endTime ? MatchEndKind.TimeLimit : MatchEndKind.SuddenDeath;
+                return result;
+            }
+            return notEnded;
         }
     }
 
@@ -87,12 +133,35 @@ namespace Game.Core
         //   every spawn pad occupied: null, this only happens if something is broken, MatchManager logs an error
         // At match start MatchManager calls this once per player in turn,
         // players already placed count as enemies, so everyone spreads out
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         public static GridCoord? Pick(IReadOnlyList<GridCoord> spawnPads,
                                       IReadOnlyList<GridCoord> livingEnemyPositions,
                                       Func<GridCoord, bool> isOccupied)
         {
-            return null;
+            GridCoord? best = null;
+            int bestDistance = -1;
+
+            foreach (GridCoord pad in spawnPads)
+            {
+                if (isOccupied(pad))
+                {
+                    continue;
+                }
+                int nearest = int.MaxValue;
+                foreach (GridCoord enemy in livingEnemyPositions)
+                {
+                    int distance = Math.Max(GridCoord.PadDistance(pad, enemy), Math.Abs(pad.level - enemy.level));
+                    nearest = Math.Min(nearest, distance);
+                }
+                // Strictly greater keeps the first (best ranked) pad on a tie
+                if (nearest > bestDistance)
+                {
+                    bestDistance = nearest;
+                    best = pad;
+                }
+            }
+
+            return best;
         }
     }
 }

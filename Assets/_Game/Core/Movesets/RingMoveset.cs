@@ -45,10 +45,47 @@ namespace Game.Core
         //       target = (start.x + dx, level, start.z + dz)
         //       add target if map.IsPad(target) and not isOccupied(target)
         // We need to make sure the 8 pads 1 away are never added, only the outer edge of the square counts
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         public List<GridCoord> GetReachable(GridCoord start, MapLayout map, Func<GridCoord, bool> isOccupied)
         {
-            return new List<GridCoord>();
+            List<GridCoord> result = new List<GridCoord>();
+            int lowest = Math.Max(0, start.level - MaxLevelChange);
+            int highest = Math.Min(map.levels - 1, start.level + MaxLevelChange);
+
+            for (int level = lowest; level <= highest; level++)
+            {
+                if (level == start.level)
+                {
+                    continue;
+                }
+                GridCoord target = new GridCoord(start.x, level, start.z);
+                if (map.IsPad(target) && !isOccupied(target))
+                {
+                    result.Add(target);
+                }
+            }
+
+            for (int dx = -RingDistance; dx <= RingDistance; dx++)
+            {
+                for (int dz = -RingDistance; dz <= RingDistance; dz++)
+                {
+                    GridCoord flat = new GridCoord(start.x + dx, start.level, start.z + dz);
+                    if (GridCoord.PadDistance(start, flat) != RingDistance)
+                    {
+                        continue;
+                    }
+                    for (int level = lowest; level <= highest; level++)
+                    {
+                        GridCoord target = new GridCoord(flat.x, level, flat.z);
+                        if (map.IsPad(target) && !isOccupied(target))
+                        {
+                            result.Add(target);
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

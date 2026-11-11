@@ -30,30 +30,63 @@ namespace Game
     {
         [SerializeField] private MatchSettings _settings;
 
+        private NetworkManager _manager;
+
         // Why this headset was last disconnected, for the lobby status line ("Match is full", "Host left")
         public static string LastDisconnectReason { get; private set; } = "";
 
         // NetworkManager.Singleton (on this object): ConnectionApprovalCallback = Approve,
         // subscribe to OnClientDisconnectCallback
         // We need to make sure this runs before the template starts a session, Awake does
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void Awake()
         {
+            NetworkManager manager = GetComponent<NetworkManager>();
+            if (manager == null)
+            {
+                manager = NetworkManager.Singleton;
+            }
+            if (manager == null)
+            {
+                Debug.LogError("[SessionGuard] No NetworkManager found, put this on the Network Manager object", this);
+                return;
+            }
+            _manager = manager;
+            _manager.ConnectionApprovalCallback = Approve;
+            _manager.OnClientDisconnectCallback += OnClientDisconnected;
         }
 
         // Clear ConnectionApprovalCallback, unsubscribe
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void OnDestroy()
         {
+            if (_manager == null)
+            {
+                return;
+            }
+            _manager.ConnectionApprovalCallback = null;
+            _manager.OnClientDisconnectCallback -= OnClientDisconnected;
         }
 
         // Host only, once per join request
         //   fewer than _settings.MaxPlayers connected: Approved = true, CreatePlayerObject = true
         //   otherwise: Approved = false, Reason = "Match is full"
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void Approve(NetworkManager.ConnectionApprovalRequest request,
                              NetworkManager.ConnectionApprovalResponse response)
         {
+            int connected = _manager.ConnectedClientsIds.Count;
+            if (connected < _settings.MaxPlayers)
+            {
+                response.Approved = true;
+                response.CreatePlayerObject = true;
+            }
+            else
+            {
+                response.Approved = false;
+                response.Reason = "Match is full";
+            }
+            response.Pending = false;
         }
 
         // Listener for NetworkManager.OnClientDisconnectCallback
@@ -61,9 +94,20 @@ namespace Game
         //   on a client, we were disconnected (clientId is our own): LastDisconnectReason = NetworkManager.DisconnectReason,
         //   or "Host left" if it is empty
         // The template takes the player back to its own menu, nothing else to do here
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void OnClientDisconnected(ulong clientId)
         {
+            if (_manager.IsServer)
+            {
+                if (clientId != _manager.LocalClientId && MatchManager.Instance != null)
+                {
+                    MatchManager.Instance.ServerHandleDisconnect(clientId);
+                }
+                return;
+            }
+
+            string reason = _manager.DisconnectReason;
+            LastDisconnectReason = string.IsNullOrEmpty(reason) ? "Host left" : reason;
         }
     }
 }

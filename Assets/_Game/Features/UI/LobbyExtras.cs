@@ -25,6 +25,7 @@
 //   3. Add this component to the canvas, drag everything into its slots and DefaultMatch into Settings
 //   The lobby platform has a see-through floor, place the canvas so it doesn't hide the arena
 
+using Game.Core;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -45,11 +46,26 @@ namespace Game
 
         [SerializeField] private TMP_Text _statusText;
 
+        private static readonly Color SelectedColor = new Color(0.3f, 0.9f, 1f, 1f);
+
         // Connect the buttons: Start -> OnStartPressed, Height -> OnHeightPressed, character i -> OnCharacterPressed(i)
         // We need to make sure each character button passes its own index (copy i into a local before the lambda)
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void Start()
         {
+            if (_startButton != null)
+            {
+                _startButton.onClick.AddListener(OnStartPressed);
+            }
+            if (_heightButton != null)
+            {
+                _heightButton.onClick.AddListener(OnHeightPressed);
+            }
+            for (int i = 0; i < _characterButtons.Length; i++)
+            {
+                int index = i;
+                _characterButtons[i].onClick.AddListener(() => OnCharacterPressed(index));
+            }
         }
 
         // Every frame:
@@ -59,27 +75,88 @@ namespace Game
         //   status: "Room ABC123   Lobby   3/5 players" (XRINetworkGameManager.ConnectedRoomCode),
         //     plus SessionGuard.LastDisconnectReason on a second line if it isn't empty
         //   not connected (PlayerProfile.Local is null): only the status line, "Not connected"
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void Update()
         {
+            NetworkManager network = NetworkManager.Singleton;
+            PlayerProfile me = PlayerProfile.Local;
+            MatchManager match = MatchManager.Instance;
+            bool connected = network != null && network.IsConnectedClient && me != null;
+
+            if (_startButton != null)
+            {
+                bool canStart = connected && network.IsHost && match != null
+                                && (match.Phase.Value == MatchPhase.Lobby || match.Phase.Value == MatchPhase.Ended);
+                _startButton.gameObject.SetActive(canStart);
+                if (canStart && _startButtonLabel != null)
+                {
+                    _startButtonLabel.text = match.Phase.Value == MatchPhase.Ended ? "Restart" : "Start";
+                }
+            }
+
+            bool inLobbyArea = false;
+            if (connected)
+            {
+                PlayerCombat combat = PlayerCombat.Local;
+                bool dead = combat == null || !combat.IsAlive.Value;
+                bool beforeMatch = match == null || match.Phase.Value == MatchPhase.Lobby || match.Phase.Value == MatchPhase.Countdown;
+                inLobbyArea = dead || beforeMatch;
+            }
+            for (int i = 0; i < _characterButtons.Length; i++)
+            {
+                _characterButtons[i].interactable = inLobbyArea;
+                Image background = _characterButtons[i].targetGraphic as Image;
+                if (background != null)
+                {
+                    background.color = connected && me.CharacterIndex.Value == i ? SelectedColor : Color.white;
+                }
+            }
+
+            if (_statusText == null)
+            {
+                return;
+            }
+            string status = "Not connected";
+            if (connected)
+            {
+                string phase = match != null ? match.Phase.Value.ToString() : "";
+                status = $"Room {XRINetworkGameManager.ConnectedRoomCode}   {phase}   {PlayerProfile.All.Count}/{_settings.MaxPlayers} players";
+            }
+            if (!string.IsNullOrEmpty(SessionGuard.LastDisconnectReason))
+            {
+                status += "\n" + SessionGuard.LastDisconnectReason;
+            }
+            _statusText.text = status;
         }
 
         // Host only: MatchManager.Instance.ServerStartMatch()
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void OnStartPressed()
         {
+            if (MatchManager.Instance != null && NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+            {
+                MatchManager.Instance.ServerStartMatch();
+            }
         }
 
         // LocalRig.Instance.CalibrateHeight()
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void OnHeightPressed()
         {
+            if (LocalRig.Instance != null)
+            {
+                LocalRig.Instance.CalibrateHeight();
+            }
         }
 
         // PlayerProfile.Local.RequestCharacterRpc(index)
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void OnCharacterPressed(int index)
         {
+            if (PlayerProfile.Local != null)
+            {
+                PlayerProfile.Local.RequestCharacterRpc(index);
+            }
         }
     }
 }

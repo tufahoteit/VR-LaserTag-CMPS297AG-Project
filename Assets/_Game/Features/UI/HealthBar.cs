@@ -67,16 +67,27 @@ namespace Game
         private float _trailWaitUntil;
 
         // Find PlayerCombat on this object, BuildBar, start hidden
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void Awake()
         {
+            _combat = GetComponent<PlayerCombat>();
+            _block = new MaterialPropertyBlock();
+            BuildBar();
+            _alpha = 0f;
+            _root.gameObject.SetActive(false);
         }
 
         // Make _root (an empty child) and the three cubes under it, remove their colliders, give them _barMaterial
         // Order front to back: fill in front of trail in front of background, a few millimetres apart so they never flicker
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void BuildBar()
         {
+            _root = new GameObject("HealthBar").transform;
+            _root.SetParent(transform, false);
+
+            _background = MakeBarCube("Background", 0f);
+            _trail = MakeBarCube("Trail", -0.003f);
+            _fill = MakeBarCube("Fill", -0.006f);
         }
 
         // Unity runs LateUpdate every frame after every Update, so the head and the camera have already moved this frame
@@ -88,28 +99,108 @@ namespace Game
         //   trail: if fraction dropped since last frame, _trailWaitUntil = now + _trailDelay,
         //     after that, _trailFraction moves down toward fraction at _trailSpeed, SetWidth(_trail, _trailFraction)
         //   apply _alpha to all three colours
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void LateUpdate()
         {
+            if (_combat == null || _root == null)
+            {
+                return;
+            }
+            bool hidden = _combat.IsOwner || !_combat.IsAlive.Value || _combat.Head == null
+                          || LocalRig.Instance == null || LocalRig.Instance.Head == null;
+            if (hidden)
+            {
+                _alpha = 0f;
+                _trailFraction = 1f;
+                _lastFraction = 1f;
+                _root.gameObject.SetActive(false);
+                return;
+            }
+
+            float maxHp = _settings.MaxHp;
+            float fraction = maxHp > 0f ? Mathf.Clamp01(_combat.Hp.Value / maxHp) : 0f;
+            float targetAlpha = fraction < 1f ? 1f : 0f;
+            _alpha = Mathf.MoveTowards(_alpha, targetAlpha, Time.deltaTime / Mathf.Max(0.01f, _fadeSeconds));
+            _root.gameObject.SetActive(_alpha > 0.001f);
+            if (!_root.gameObject.activeSelf)
+            {
+                return;
+            }
+
+            Transform eyes = LocalRig.Instance.Head;
+            _root.position = _combat.Head.position + Vector3.up * _heightAboveHead;
+            _root.rotation = Quaternion.LookRotation(_root.position - eyes.position);
+
+            if (fraction < _lastFraction)
+            {
+                _trailWaitUntil = Time.time + _trailDelay;
+            }
+            _lastFraction = fraction;
+            if (Time.time >= _trailWaitUntil)
+            {
+                _trailFraction = Mathf.MoveTowards(_trailFraction, fraction, _trailSpeed * Time.deltaTime);
+            }
+            _trailFraction = Mathf.Max(_trailFraction, fraction);
+
+            SetWidth(_fill, fraction);
+            SetWidth(_trail, _trailFraction);
+            SetColor(_background, new Color(0.1f, 0.1f, 0.1f, 0.6f * _alpha));
+            SetColor(_trail, new Color(1f, 1f, 1f, 0.9f * _alpha));
+            Color fill = FillColor(fraction);
+            fill.a = _alpha;
+            SetColor(_fill, fill);
+        }
+
+        // One flat cube of the bar under _root, no collider, z = how far toward the viewer it sits
+        // (the bar faces away from the camera, so negative z is in front)
+        private Transform MakeBarCube(string cubeName, float z)
+        {
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = cubeName;
+            Destroy(cube.GetComponent<Collider>());
+            cube.transform.SetParent(_root, false);
+            cube.transform.localPosition = new Vector3(0f, 0f, z);
+            cube.transform.localScale = new Vector3(_width, _height, 0.002f);
+            if (_barMaterial != null)
+            {
+                cube.GetComponent<Renderer>().sharedMaterial = _barMaterial;
+            }
+            return cube.transform;
         }
 
         // Scale a cube's width to fraction of _width and shift it so its left edge stays in place
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void SetWidth(Transform bar, float fraction)
         {
+            float width = _width * Mathf.Clamp01(fraction);
+            Vector3 scale = bar.localScale;
+            scale.x = Mathf.Max(0.0001f, width);
+            bar.localScale = scale;
+            // Left edge stays at -_width / 2
+            Vector3 position = bar.localPosition;
+            position.x = -_width * 0.5f + width * 0.5f;
+            bar.localPosition = position;
         }
 
         // Green at full, yellow at half, red near empty
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private static Color FillColor(float fraction)
         {
-            return Color.green;
+            if (fraction > 0.5f)
+            {
+                return Color.Lerp(Color.yellow, Color.green, (fraction - 0.5f) * 2f);
+            }
+            return Color.Lerp(Color.red, Color.yellow, fraction * 2f);
         }
 
         // Colour one cube without making a new material: _block.SetColor("_BaseColor", color), renderer.SetPropertyBlock(_block)
-        // TODO(Karim)
+        // TODO(Karim) [X] Completed
         private void SetColor(Transform bar, Color color)
         {
+            Renderer renderer = bar.GetComponent<Renderer>();
+            renderer.GetPropertyBlock(_block);
+            _block.SetColor("_BaseColor", color);
+            renderer.SetPropertyBlock(_block);
         }
     }
 }
