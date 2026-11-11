@@ -197,10 +197,11 @@ namespace Game
         }
 
         // How far your head is from the pad centre, on the floor (ignoring height)
+        // The leash only applies while you stand on a pad, in the lobby area you may walk around freely
         // TODO(Joe) [X] Completed
         public float LeashDistance()
         {
-            if (_head == null || !_hasPadCenter)
+            if (_head == null || !_hasPadCenter || PlayerMovement.Local == null || !PlayerMovement.Local.IsOnBoard)
             {
                 return 0f;
             }
