@@ -280,7 +280,7 @@ namespace Game
         //     below: full width, windowBottom tall
         //     above: full width, from windowTop to levelHeight
         //     left and right: (cellSize - windowWidth) / 2 wide, from windowBottom to windowTop
-        //   Open: nothing, but if the cell on the other side has an Open floor (a drop), add a rail at railHeight
+        //   Open: nothing, but at a real edge (one side has a floor, the other side is a drop) add a rail at railHeight
         // Every non-Open side also adds its two end corners to postCorners, for the posts
         // TODO(Joseph) [X] Completed
         private void BuildSides(GridCoord coord, Transform parent, float scale, bool forGame, HashSet<Vector3> postCorners)
@@ -338,8 +338,11 @@ namespace Game
                         PlaceWallPiece("Window right", sideCentre, along, sideOffset, sideWidth, bottom, top, parent, scale, forGame);
                         break;
                     default:
-                        // Open side: a rail if the cell on the other side is a drop
-                        if (layout.IsInBounds(neighbour) && layout.GetFloor(neighbour) == FloorKind.Open)
+                        // Open side: a rail only at a real edge, where one side has a floor and the other side is a drop
+                        FloorKind here = layout.GetFloor(coord);
+                        FloorKind there = layout.GetFloor(neighbour);
+                        bool isEdge = layout.IsInBounds(neighbour) && ((here == FloorKind.Open) != (there == FloorKind.Open));
+                        if (isEdge)
                         {
                             Vector3 railSize = along == Vector3.right
                                 ? new Vector3(cs, 0.05f, _postSize * 0.5f)
