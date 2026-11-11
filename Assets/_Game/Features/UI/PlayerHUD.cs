@@ -203,6 +203,7 @@ namespace Game
             }
             forward.Normalize();
 
+            _board.gameObject.SetActive(true);
             _board.position = head.position + forward * BoardDistance + Vector3.down * BoardDrop;
             // A world space canvas reads correctly when its forward points away from the viewer
             _board.rotation = Quaternion.LookRotation(_board.position - head.position);
@@ -211,12 +212,17 @@ namespace Game
         }
 
         // _boardGroup.alpha = 0, _boardOpen = false
+        // The whole board object is turned off too: the minimap plans are 3D cubes, not UI, the alpha alone doesn't hide them
         // TODO(Ali) [X] Completed
         private void HideBoard()
         {
             if (_boardGroup != null)
             {
                 _boardGroup.alpha = 0f;
+            }
+            if (_board != null)
+            {
+                _board.gameObject.SetActive(false);
             }
             _boardOpen = false;
         }

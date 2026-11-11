@@ -215,7 +215,7 @@ namespace Game
                 float yaw = Mathf.Atan2(facing.x, facing.z) * Mathf.Rad2Deg;
                 Quaternion turn = Quaternion.Euler(0f, yaw, 0f);
                 _arrow.localRotation = turn;
-                _arrow.localPosition = myDot + turn * Vector3.forward * (_dotSize * 1.2f);
+                _arrow.localPosition = myDot + turn * Vector3.forward * (_dotSize * 0.8f);
                 _outline.localPosition = _plans[myPad.Value.level].localPosition;
             }
         }
@@ -266,7 +266,7 @@ namespace Game
             return dot.transform;
         }
 
-        // A small flat triangle or cone under this object for your facing, no collider
+        // A short flat nose sticking out of your dot for your facing, no collider
         // TODO(Ali) [X] Completed
         private Transform MakeArrow()
         {
@@ -274,7 +274,7 @@ namespace Game
             arrow.name = "Facing";
             Destroy(arrow.GetComponent<Collider>());
             arrow.transform.SetParent(transform, false);
-            arrow.transform.localScale = new Vector3(_dotSize * 0.4f, _dotSize * 0.2f, _dotSize * 1.5f);
+            arrow.transform.localScale = new Vector3(_dotSize * 0.4f, _dotSize * 0.2f, _dotSize * 0.7f);
             if (_dotMaterial != null)
             {
                 arrow.GetComponent<Renderer>().sharedMaterial = _dotMaterial;
