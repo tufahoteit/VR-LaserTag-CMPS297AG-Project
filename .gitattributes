@@ -1,0 +1,45 @@
+# Line endings: Git stores text files with LF and checks them out as the platform expects
+* text=auto
+
+# Code
+*.cs text diff=csharp
+*.py text
+*.md text
+*.json text
+*.asmdef text
+*.inputactions text
+*.shader text
+
+# Unity YAML files: always LF, Unity writes them that way on every platform
+*.unity text eol=lf
+*.prefab text eol=lf
+*.asset text eol=lf
+*.meta text eol=lf
+*.mat text eol=lf
+*.anim text eol=lf
+*.controller text eol=lf
+*.physicMaterial text eol=lf
+*.overrideController text eol=lf
+*.mask text eol=lf
+
+# Binary files: never touch line endings, never try to diff or merge them
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.psd binary
+*.tga binary
+*.exr binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.mp4 binary
+*.fbx binary
+*.FBX binary
+*.obj binary
+*.glb binary
+*.ttf binary
+*.otf binary
+*.dll binary
+*.so binary
+*.apk binary
+*.zip binary

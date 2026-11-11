@@ -274,7 +274,8 @@ namespace XRMultiplayer
                 m_Status.Value = "Connecting To Room: " + sessionName;
                 try
                 {
-                    var options = GetSessionOptions(sessionName, isPrivate, maxPlayers).WithDistributedAuthorityNetwork();
+                    // Client-host over Relay instead of Distributed Authority, the host is the match referee
+                    var options = GetSessionOptions(sessionName, isPrivate, maxPlayers).WithRelayNetwork();
                     Guid sessionId = Guid.NewGuid();
 
                     StopAllCoroutines();
