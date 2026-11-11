@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5130436c23e94884db9b9f406e3f37fb, type: 3}
+  m_Name: DefaultMatch
+  m_EditorClassIdentifier: Assembly-CSharp::Game.MatchSettings
+  _characters:
+  - {fileID: 11400000, guid: 72b8e05f1fa4a044c896019e2051eae8, type: 2}
+  - {fileID: 11400000, guid: 8b9507252f8619a42a703aa7ded08936, type: 2}
+  - {fileID: 11400000, guid: 6c278ecd57aab6f409f9e4a839f07ef4, type: 2}
+  _weapon: {fileID: 11400000, guid: d245b1468d7184e45a19199cae521cb1, type: 2}
+  _maxPlayers: 5
+  _killsToWin: 15
+  _timeLimitSeconds: 540
+  _countdownSeconds: 5
+  _endScreenSeconds: 5
+  _respawnDelaySeconds: 4
+  _spawnProtectionSeconds: 3
+  _maxHp: 100
+  _regenDelaySeconds: 3.5
+  _regenTimeToFull: 2.5
+  _tradeWindowSeconds: 0.15
+  _hitRangeTolerance: 1
+  _originTolerance: 1.5
+  _minTeleportGap: 0.3
+  _leashRadius: 0.6
+  _standardEyeHeight: 1.65
