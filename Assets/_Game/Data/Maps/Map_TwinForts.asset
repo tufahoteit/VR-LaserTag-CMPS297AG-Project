@@ -667,7 +667,7 @@ MonoBehaviour:
       spawnRank: 0
   _cellSize: 3
   _levelHeight: 3
-  _origin: {x: 0, y: 0, z: 0}
+  _origin: {x: 13, y: 0, z: -4.65}
   _padAnchorDistance: 0.9
   _halfWallHeight: 1.2
   _windowBottom: 1.2
