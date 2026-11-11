@@ -84,25 +84,66 @@ namespace Game
         private double _deathTime = double.NegativeInfinity;
         private double _lastShotTime = double.NegativeInfinity;
 
+        // The network server time, the same clock on every headset
+        private double Now
+        {
+            get { return NetworkManager.ServerTime.Time; }
+        }
+
         // Add to All, set Local if IsOwner
         // Find the hitboxes (GetComponentsInChildren<Hitbox>), _head = the one with IsHead
         // Every hitbox: ApplyLayer(IsOwner), SetEnabled(IsAlive)
         // Subscribe to IsAlive changes: turn the hitboxes on or off
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public override void OnNetworkSpawn()
         {
+            All.Add(this);
+            if (IsOwner)
+            {
+                Local = this;
+            }
+
+            _hitboxes = GetComponentsInChildren<Hitbox>(true);
+            foreach (Hitbox hitbox in _hitboxes)
+            {
+                if (hitbox.IsHead)
+                {
+                    _head = hitbox.transform;
+                }
+                hitbox.ApplyLayer(IsOwner);
+                hitbox.SetEnabled(_isAlive.Value);
+            }
+            if (_head == null)
+            {
+                Debug.LogError($"[PlayerCombat] {name}: no head Hitbox found under the player", this);
+            }
+
+            _isAlive.OnValueChanged += OnAliveChanged;
         }
 
         // Remove from All, clear Local, unsubscribe
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public override void OnNetworkDespawn()
         {
+            All.Remove(this);
+            if (Local == this)
+            {
+                Local = null;
+            }
+            _isAlive.OnValueChanged -= OnAliveChanged;
         }
 
         // The PlayerCombat of this client, or null, works on every headset
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public static PlayerCombat Get(ulong clientId)
         {
+            foreach (PlayerCombat combat in All)
+            {
+                if (combat.OwnerClientId == clientId)
+                {
+                    return combat;
+                }
+            }
             return null;
         }
 
@@ -111,32 +152,85 @@ namespace Game
         // The shooter reports one shot (see "One shot, on the host")
         // InvokePermission Owner: only this player's own headset can report shots for this player
         // victimClientId = NoVictim for a miss, hitPoint = where the laser stopped
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void ReportShotRpc(Vector3 origin, Vector3 hitPoint, ulong victimClientId, bool headshot)
         {
+            double now = Now;
+            WeaponDefinition weapon = _settings.Weapon;
+
+            if (!CombatRules.ShotCounts(_isAlive.Value, _deathTime, now, _settings.TradeWindowSeconds))
+            {
+                Debug.LogWarning($"[PlayerCombat] Shot from client {OwnerClientId} refused: shooter dead longer than the trade window");
+                return;
+            }
+            if (now - _lastShotTime < weapon.MinShotGap * 0.5f)
+            {
+                Debug.LogWarning($"[PlayerCombat] Shot from client {OwnerClientId} refused: closer than half the fire gap to the last shot");
+                return;
+            }
+
+            _lastShotTime = now;
+            ServerOnActed();
+
+            float shotLength = Vector3.Distance(origin, hitPoint);
+            bool hitSomething = victimClientId != NoVictim || shotLength < weapon.ShotRange - 0.01f;
+            ShowShotRpc(origin, hitPoint, hitSomething);
+
+            if (victimClientId == NoVictim)
+            {
+                return;
+            }
+            PlayerCombat victim = Get(victimClientId);
+            if (victim == null || victim == this)
+            {
+                return;
+            }
+            if (!CombatRules.IsHitInRange(shotLength, weapon.ShotRange, _settings.HitRangeTolerance))
+            {
+                Debug.LogWarning($"[PlayerCombat] Hit from client {OwnerClientId} refused: {shotLength:0.0} m is out of range");
+                return;
+            }
+            if (_head != null)
+            {
+                float originToHead = Vector3.Distance(origin, _head.position);
+                if (!CombatRules.IsOriginNearShooter(originToHead, _settings.OriginTolerance))
+                {
+                    Debug.LogWarning($"[PlayerCombat] Hit from client {OwnerClientId} refused: shot started {originToHead:0.0} m from the shooter's head");
+                    return;
+                }
+            }
+
+            victim.ServerApplyDamage(OwnerClientId, headshot);
         }
 
         // Host API, called by MatchManager and PlayerMovement
 
         // Spawn (respawn or match start): HP = MaxHp, IsAlive = true, _spawnTime = now,
         // _hasActedSinceSpawn = false, _lastDamageTime = minus infinity
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void ServerResetForSpawn()
         {
+            _hp.Value = _settings.MaxHp;
+            _isAlive.Value = true;
+            _spawnTime = Now;
+            _hasActedSinceSpawn = false;
+            _lastDamageTime = double.NegativeInfinity;
         }
 
         // The player shot or teleported, their spawn protection ends now
         // PlayerMovement calls it on a confirmed teleport, ReportShotRpc on a counted shot
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void ServerOnActed()
         {
+            _hasActedSinceSpawn = true;
         }
 
         // The match ended: IsAlive = false, no death and no kill (MatchManager sends everyone to the lobby area)
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void ServerClearForLobby()
         {
+            _isAlive.Value = false;
         }
 
         // Host only
@@ -146,9 +240,29 @@ namespace Game
         //   HP = max(0, HP - CombatRules.Damage(headshot, BodyDamage, HeadDamage)), _lastDamageTime = now
         //   HitRpc(attackerClientId, new HP, headshot)
         //   HP at 0: ServerDie(attackerClientId)
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void ServerApplyDamage(ulong attackerClientId, bool headshot)
         {
+            double now = Now;
+            if (!_isAlive.Value)
+            {
+                return;
+            }
+            if (CombatRules.IsSpawnProtected(_spawnTime, now, _settings.SpawnProtectionSeconds, _hasActedSinceSpawn))
+            {
+                return;
+            }
+
+            WeaponDefinition weapon = _settings.Weapon;
+            float newHp = Mathf.Max(0f, _hp.Value - CombatRules.Damage(headshot, weapon.BodyDamage, weapon.HeadDamage));
+            _hp.Value = newHp;
+            _lastDamageTime = now;
+            HitRpc(attackerClientId, newHp, headshot);
+
+            if (newHp <= 0f)
+            {
+                ServerDie(attackerClientId);
+            }
         }
 
         // This player died, killed by killerClientId
@@ -157,39 +271,84 @@ namespace Game
         //   We need to make sure a killer who is no longer in the match (Get returns null) is skipped, the victim still dies and respawns
         //   DeathRpc(killerClientId)
         //   MatchManager.ServerOnPlayerKilled(OwnerClientId, killerClientId): lobby area, respawn timer, win check
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void ServerDie(ulong killerClientId)
         {
+            _isAlive.Value = false;
+            _deathTime = Now;
+
+            PlayerCombat killer = Get(killerClientId);
+            if (killer != null && killer != this)
+            {
+                PlayerProfile killerProfile = killer.GetComponent<PlayerProfile>();
+                if (killerProfile != null)
+                {
+                    killerProfile.AddKill();
+                }
+                PlayerMovement killerMovement = killer.GetComponent<PlayerMovement>();
+                if (killerMovement != null)
+                {
+                    killerMovement.ServerAddCharge();
+                }
+            }
+
+            DeathRpc(killerClientId);
+            if (MatchManager.Instance != null)
+            {
+                MatchManager.Instance.ServerOnPlayerKilled(OwnerClientId, killerClientId);
+            }
         }
 
         // Host, every frame while alive: Hp = CombatRules.RegenHp(...), only write it when the value changed
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void Update()
         {
+            if (!IsServer || !IsSpawned || !_isAlive.Value)
+            {
+                return;
+            }
+            float newHp = CombatRules.RegenHp(_hp.Value, _settings.MaxHp, Now, _lastDamageTime,
+                                              _settings.RegenDelaySeconds, _settings.RegenTimeToFull, Time.deltaTime);
+            if (newHp != _hp.Value)
+            {
+                _hp.Value = newHp;
+            }
+        }
+
+        // Listener for IsAlive changes (every headset): hitboxes only while alive, shots pass through the lobby area
+        private void OnAliveChanged(bool previous, bool current)
+        {
+            foreach (Hitbox hitbox in _hitboxes)
+            {
+                hitbox.SetEnabled(current);
+            }
         }
 
         // Host to headsets, they only show things
 
         // Everyone except the shooter: RaiseShotFired (beam and sound), the shooter already showed it
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         [Rpc(SendTo.NotOwner)]
         private void ShowShotRpc(Vector3 from, Vector3 to, bool hitSomething)
         {
+            GameEvents.RaiseShotFired(OwnerClientId, from, to, hitSomething);
         }
 
         // Everyone (the host too, it runs right away there), sent on the victim's object:
         // RaisePlayerDamaged(OwnerClientId, attackerClientId, newHp, headshot)
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         [Rpc(SendTo.Everyone)]
         private void HitRpc(ulong attackerClientId, float newHp, bool headshot)
         {
+            GameEvents.RaisePlayerDamaged(OwnerClientId, attackerClientId, newHp, headshot);
         }
 
         // Everyone: RaisePlayerKilled(OwnerClientId, killerClientId), Feedback plays the death burst at this player
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         [Rpc(SendTo.Everyone)]
         private void DeathRpc(ulong killerClientId)
         {
+            GameEvents.RaisePlayerKilled(OwnerClientId, killerClientId);
         }
     }
 }

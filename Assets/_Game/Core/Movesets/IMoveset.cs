@@ -66,10 +66,20 @@ namespace Game.Core
         // Returns new ClusterMoveset(), new RingMoveset() or new RayMoveset() for the kind
         // No settings: the patterns are fixed, only charges live in the character data
         // We need to make sure every MovesetKind returns its matching class, an unknown kind throws an error
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public static IMoveset Create(MovesetKind kind)
         {
-            return null;
+            switch (kind)
+            {
+                case MovesetKind.Cluster:
+                    return new ClusterMoveset();
+                case MovesetKind.Ring:
+                    return new RingMoveset();
+                case MovesetKind.Ray:
+                    return new RayMoveset();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown moveset kind");
+            }
         }
     }
 }

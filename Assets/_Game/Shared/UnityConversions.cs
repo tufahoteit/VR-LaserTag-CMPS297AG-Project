@@ -23,17 +23,17 @@ namespace Game
         public static readonly Vector3Int NoPad = new Vector3Int(-1, -1, -1);
 
         // GridCoord to Vector3Int, used like coord.ToVector3Int()
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public static Vector3Int ToVector3Int(this GridCoord coord)
         {
-            return Vector3Int.zero;
+            return new Vector3Int(coord.x, coord.level, coord.z);
         }
 
         // Vector3Int to GridCoord, used like value.ToGrid()
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public static GridCoord ToGrid(this Vector3Int value)
         {
-            return default;
+            return new GridCoord(value.x, value.y, value.z);
         }
     }
 }

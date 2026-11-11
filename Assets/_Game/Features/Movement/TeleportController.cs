@@ -98,37 +98,111 @@ namespace Game
         private bool _aimCancelled;  // the grip cancelled this aim, nothing happens until the stick is released
 
         // Instance = this, find GhostMarkers on this object
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void Awake()
         {
+            Instance = this;
+            _markers = GetComponent<GhostMarkers>();
+            if (_markers == null)
+            {
+                Debug.LogError("[TeleportController] No GhostMarkers on this object", this);
+            }
         }
 
         // Enable the aim and cancel actions
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void OnEnable()
         {
+            if (_aimAction != null)
+            {
+                _aimAction.action.Enable();
+            }
+            if (_cancelAction != null)
+            {
+                _cancelAction.action.Enable();
+            }
         }
 
         // Disable them
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void OnDisable()
         {
+            if (_aimAction != null)
+            {
+                _aimAction.action.Disable();
+            }
+            if (_cancelAction != null)
+            {
+                _cancelAction.action.Disable();
+            }
         }
 
         // Every frame, aiming = _aimAction.action.phase == InputActionPhase.Performed, compared with last frame:
         //   aiming started: BuildTargets, if any: _markers.Show(_targets)
         //   still aiming: UpdateSelection, cancel pressed this frame: clear _selected, _markers.Hide(), _aimCancelled = true until aiming ends
         //   aiming ended: if _selected has a value: TryTeleport, then _markers.Hide()
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void Update()
         {
+            if (_aimAction == null || PlayerMovement.Local == null || LocalRig.Instance == null)
+            {
+                return;
+            }
+
+            bool aiming = _aimAction.action.phase == InputActionPhase.Performed;
+            if (aiming && !_wasAiming)
+            {
+                _aimCancelled = false;
+                _selected = null;
+                BuildTargets();
+                if (_targets.Count > 0)
+                {
+                    _markers.Show(_targets);
+                }
+            }
+            else if (aiming && !_aimCancelled)
+            {
+                if (_targets.Count > 0)
+                {
+                    UpdateSelection();
+                }
+                if (_cancelAction != null && _cancelAction.action.WasPressedThisFrame())
+                {
+                    _selected = null;
+                    _markers.Hide();
+                    _aimCancelled = true;
+                }
+            }
+            else if (!aiming && _wasAiming)
+            {
+                if (!_aimCancelled && _selected.HasValue && CanTeleportNow())
+                {
+                    TryTeleport(_selected.Value.pad);
+                }
+                _selected = null;
+                _markers.Hide();
+            }
+            _wasAiming = aiming;
         }
 
         // Can you teleport right now: on a pad, match Playing, Charges - _pendingRequests above 0, 0.3 s since the last one
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private bool CanTeleportNow()
         {
-            return false;
+            PlayerMovement player = PlayerMovement.Local;
+            if (player == null || !PredictedPad.HasValue)
+            {
+                return false;
+            }
+            if (MatchManager.Instance != null && MatchManager.Instance.Phase.Value != MatchPhase.Playing)
+            {
+                return false;
+            }
+            if (player.Charges.Value - _pendingRequests <= 0)
+            {
+                return false;
+            }
+            return Time.timeAsDouble - _lastTeleportTime >= _settings.MinTeleportGap;
         }
 
         // Fill _targets from PlayerMovement.Local.GetReachablePads(PredictedPad)
@@ -136,53 +210,153 @@ namespace Game
         //   pad in your own column: an arrow in front of your head, _arrowDistance away,
         //     stacked up or down by _arrowSpacing per level (one level up = first arrow above eye height)
         // Empty if CanTeleportNow is false
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void BuildTargets()
         {
+            _targets.Clear();
+            if (!CanTeleportNow() || MapBuilder.Instance == null)
+            {
+                return;
+            }
+
+            MapDefinition map = MapBuilder.Instance.Map;
+            GridCoord from = PredictedPad.Value;
+            Transform head = LocalRig.Instance.Head;
+            Vector3 forward = head.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 0.0001f)
+            {
+                forward = Vector3.forward;
+            }
+            forward.Normalize();
+
+            foreach (GridCoord pad in PlayerMovement.Local.GetReachablePads(from))
+            {
+                MarkerTarget target = new MarkerTarget();
+                target.pad = pad;
+                if (pad.x == from.x && pad.z == from.z)
+                {
+                    // Own column: an arrow in front of you, one step up or down per level
+                    int levels = pad.level - from.level;
+                    target.isElevator = true;
+                    target.position = head.position + forward * _arrowDistance + Vector3.up * (levels * _arrowSpacing);
+                }
+                else
+                {
+                    target.isElevator = false;
+                    target.position = map.PadWorldPosition(pad);
+                }
+                _targets.Add(target);
+            }
         }
 
         // The target with the smallest angle to where the left controller points, if under _maxSelectAngle
         // Then _markers.SetSelected(that target, or null)
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void UpdateSelection()
         {
+            Transform controller = LocalRig.Instance.LeftController;
+            if (controller == null)
+            {
+                return;
+            }
+
+            MarkerTarget? best = null;
+            float bestAngle = _maxSelectAngle;
+            foreach (MarkerTarget target in _targets)
+            {
+                float angle = Vector3.Angle(controller.forward, target.position - controller.position);
+                if (angle < bestAngle)
+                {
+                    bestAngle = angle;
+                    best = target;
+                }
+            }
+
+            _selected = best;
+            _markers.SetSelected(best);
         }
 
         // Move instantly and ask the host
         // LocalRig.TeleportTo(map.PadWorldPosition(target)), PredictedPad = target, RaisePlayerTeleported (sounds play now),
         // _pendingRequests + 1, _lastTeleportTime = now, PlayerMovement.Local.RequestTeleportRpc(target.ToVector3Int())
         // _pendingRequests goes back down when the host's answer arrives (CurrentPad changes or OnTeleportRejected)
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         private void TryTeleport(GridCoord target)
         {
+            MapDefinition map = MapBuilder.Instance.Map;
+            GridCoord from = PredictedPad.Value;
+
+            LocalRig.Instance.TeleportTo(map.PadWorldPosition(target));
+            PredictedPad = target;
+            GameEvents.RaisePlayerTeleported(PlayerMovement.Local.OwnerClientId, from, target);
+            _pendingRequests++;
+            _lastTeleportTime = Time.timeAsDouble;
+            PlayerMovement.Local.RequestTeleportRpc(target.ToVector3Int());
         }
 
         // The host refused: snap back to confirmedPad (LocalRig.TeleportTo), PredictedPad = confirmedPad, _pendingRequests - 1
         // RaiseTeleportDenied, Feedback plays the "denied" sound (no text, VR mid-fight is no place for reading)
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void OnTeleportRejected(GridCoord confirmedPad)
         {
+            if (MapBuilder.Instance != null && LocalRig.Instance != null)
+            {
+                LocalRig.Instance.TeleportTo(MapBuilder.Instance.Map.PadWorldPosition(confirmedPad));
+            }
+            PredictedPad = confirmedPad;
+            _pendingRequests = Mathf.Max(0, _pendingRequests - 1);
+            GameEvents.RaiseTeleportDenied();
         }
 
         // The host confirmed one of your teleports (PlayerMovement sees your CurrentPad change on your headset)
         // _pendingRequests - 1, never below 0, so the charge lights stop counting that request
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void OnTeleportConfirmed()
         {
+            _pendingRequests = Mathf.Max(0, _pendingRequests - 1);
         }
 
         // The host spawned you: LocalRig.TeleportTo(pad), LocalRig.FaceTowards(arena centre), PredictedPad = pad, _pendingRequests = 0
         // Arena centre = halfway between map.GridToWorld((0, level, 0)) and map.GridToWorld((width - 1, level, depth - 1)) at your level
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void PlaceAt(GridCoord pad)
         {
+            _pendingRequests = 0;
+            _selected = null;
+            if (_markers != null)
+            {
+                _markers.Hide();
+            }
+            PredictedPad = pad;
+            if (MapBuilder.Instance == null || LocalRig.Instance == null)
+            {
+                return;
+            }
+
+            MapDefinition map = MapBuilder.Instance.Map;
+            LocalRig.Instance.TeleportTo(map.PadWorldPosition(pad));
+            Vector3 corner = map.GridToWorld(new GridCoord(0, pad.level, 0));
+            Vector3 farCorner = map.GridToWorld(new GridCoord(map.Layout.width - 1, pad.level, map.Layout.depth - 1));
+            LocalRig.Instance.FaceTowards((corner + farCorner) * 0.5f);
         }
 
         // You died or the match ended: LocalRig.TeleportTo(lobby area point), PredictedPad = null, _markers.Hide(), _pendingRequests = 0
         // We need to make sure _pendingRequests is reset here, a request still waiting when you died never gets an answer
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void GoToLobbyArea()
         {
+            _pendingRequests = 0;
+            _selected = null;
+            PredictedPad = null;
+            if (_markers != null)
+            {
+                _markers.Hide();
+            }
+            if (LocalRig.Instance != null && _lobbyAreaPoint != null)
+            {
+                LocalRig.Instance.TeleportTo(_lobbyAreaPoint.position);
+            }
         }
     }
 }

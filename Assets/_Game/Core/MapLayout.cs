@@ -209,18 +209,32 @@ namespace Game.Core
         // Every cell starts as Empty with open walls
         // Level 0 floors start Solid (the ground), higher levels start Open (air)
         // We need to make sure every slot gets its own new Cell(), otherwise all slots would share one cell
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public void CreateEmpty(int newWidth, int newDepth, int newLevels)
         {
+            width = newWidth;
+            depth = newDepth;
+            levels = newLevels;
+            cells = new Cell[CellCount];
+            for (int i = 0; i < cells.Length; i++)
+            {
+                Cell cell = new Cell();
+                cell.storedFloor = CoordOf(i).level == 0 ? FloorKind.Solid : FloorKind.Open;
+                cells[i] = cell;
+            }
         }
 
         // Raw cell access for building maps only: editor tools, generator, tests
         // Gameplay code never calls this, it uses the query functions below
         // Returns null if coord is outside the map
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public Cell EditCell(GridCoord coord)
         {
-            return null;
+            if (!IsInBounds(coord))
+            {
+                return null;
+            }
+            return cells[IndexOf(coord)];
         }
 
         // Grid helpers
@@ -228,64 +242,82 @@ namespace Game.Core
         // True if coord is inside the map on all three axes
         // Always check this before using an index, a coord just past the east edge
         // would otherwise point at a cell on the next row
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public bool IsInBounds(GridCoord coord)
         {
-            return false;
+            return coord.x >= 0 && coord.x < width
+                && coord.z >= 0 && coord.z < depth
+                && coord.level >= 0 && coord.level < levels;
         }
 
         // Array index of coord: x + width * (z + depth * level)
         // Only valid when IsInBounds(coord)
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public int IndexOf(GridCoord coord)
         {
-            return -1;
+            return coord.x + width * (coord.z + depth * coord.level);
         }
 
         // Grid position of an array index, the reverse of IndexOf
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public GridCoord CoordOf(int index)
         {
-            return default;
+            int x = index % width;
+            int rest = index / width;
+            int z = rest % depth;
+            int level = rest / depth;
+            return new GridCoord(x, level, z);
         }
 
         // Queries for gameplay
 
         // What is inside the cell, Solid if outside the map
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public CellKind GetKind(GridCoord coord)
         {
-            return CellKind.Solid;
+            if (!IsInBounds(coord))
+            {
+                return CellKind.Solid;
+            }
+            return cells[IndexOf(coord)].kind;
         }
 
         // True if coord is inside the map and is a pad
         // Every moveset filters its targets with this
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public bool IsPad(GridCoord coord)
         {
-            return false;
+            return IsInBounds(coord) && cells[IndexOf(coord)].kind == CellKind.Pad;
         }
 
         // Where the pad sits in its cell, Center for non-pads
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public PadAnchor GetAnchor(GridCoord coord)
         {
-            return PadAnchor.Center;
+            if (!IsPad(coord))
+            {
+                return PadAnchor.Center;
+            }
+            return cells[IndexOf(coord)].padAnchor;
         }
 
         // True if the cell is a pad with a spawn rank above 0
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public bool IsSpawn(GridCoord coord)
         {
-            return false;
+            return GetSpawnRank(coord) > 0;
         }
 
         // The spawn rank of the pad, 1 = best spawn, 0 if it is not a spawn or not a pad
         // When two spawn pads are equally far from enemies, the lower rank wins
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public int GetSpawnRank(GridCoord coord)
         {
-            return 0;
+            if (!IsPad(coord))
+            {
+                return 0;
+            }
+            return Math.Max(0, cells[IndexOf(coord)].spawnRank);
         }
 
         // The wall of coord facing dir
@@ -298,61 +330,147 @@ namespace Game.Core
         //   West comes from the east wall of coord.Offset(-1, 0, 0)
         // We need to make sure the outside check comes first: without it the north and east edges read the edge cell's
         // own stored value (Open by default) and the arena would have walls on two edges and holes on the other two
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public SideKind GetSide(GridCoord coord, Direction dir)
         {
-            return SideKind.Solid;
+            GridCoord neighbour = Step(coord, dir);
+            if (!IsInBounds(coord) || !IsInBounds(neighbour))
+            {
+                return SideKind.Solid;
+            }
+            if (GetKind(coord) == CellKind.Solid || GetKind(neighbour) == CellKind.Solid)
+            {
+                return SideKind.Solid;
+            }
+            switch (dir)
+            {
+                case Direction.North:
+                    return cells[IndexOf(coord)].storedNorth;
+                case Direction.East:
+                    return cells[IndexOf(coord)].storedEast;
+                case Direction.South:
+                    return cells[IndexOf(neighbour)].storedNorth;
+                default:
+                    return cells[IndexOf(neighbour)].storedEast;
+            }
+        }
+
+        // The neighbouring cell in dir (North = +z, East = +x)
+        private static GridCoord Step(GridCoord coord, Direction dir)
+        {
+            switch (dir)
+            {
+                case Direction.North:
+                    return coord.Offset(0, 0, 1);
+                case Direction.East:
+                    return coord.Offset(1, 0, 0);
+                case Direction.South:
+                    return coord.Offset(0, 0, -1);
+                default:
+                    return coord.Offset(-1, 0, 0);
+            }
         }
 
         // Floor of coord, Solid if outside the map
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public FloorKind GetFloor(GridCoord coord)
         {
-            return FloorKind.Solid;
+            if (!IsInBounds(coord))
+            {
+                return FloorKind.Solid;
+            }
+            return cells[IndexOf(coord)].storedFloor;
         }
 
         // Ceiling of coord = the floor of the cell above
         // So a ceiling can be Solid (roof), Hatch (hole you can be shot through from above) or Open (no roof)
         // On the top level there is no cell above, so there is no ceiling, return Open
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public FloorKind GetCeiling(GridCoord coord)
         {
-            return FloorKind.Solid;
+            GridCoord above = coord.Offset(0, 1, 0);
+            if (!IsInBounds(above))
+            {
+                return FloorKind.Open;
+            }
+            return GetFloor(above);
         }
 
         // All six surfaces of coord in one call
         // We need to make sure all six come from GetSide, GetFloor and GetCeiling so the store-once rule is applied
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public CellSurfaces GetSurfaces(GridCoord coord)
         {
-            return default;
+            CellSurfaces surfaces = new CellSurfaces();
+            surfaces.north = GetSide(coord, Direction.North);
+            surfaces.east = GetSide(coord, Direction.East);
+            surfaces.south = GetSide(coord, Direction.South);
+            surfaces.west = GetSide(coord, Direction.West);
+            surfaces.floor = GetFloor(coord);
+            surfaces.ceiling = GetCeiling(coord);
+            return surfaces;
         }
 
         // Direction of an anchor as a step on the floor, each part -1, 0 or 1
         // Center = (0, 0), NorthEast = (1, 1), West = (-1, 0)
         // MapDefinition multiplies this by the push distance to get the pad position
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public static (int dx, int dz) AnchorDirection(PadAnchor anchor)
         {
-            return (0, 0);
+            switch (anchor)
+            {
+                case PadAnchor.North:
+                    return (0, 1);
+                case PadAnchor.East:
+                    return (1, 0);
+                case PadAnchor.South:
+                    return (0, -1);
+                case PadAnchor.West:
+                    return (-1, 0);
+                case PadAnchor.NorthEast:
+                    return (1, 1);
+                case PadAnchor.SouthEast:
+                    return (1, -1);
+                case PadAnchor.SouthWest:
+                    return (-1, -1);
+                case PadAnchor.NorthWest:
+                    return (-1, 1);
+                default:
+                    return (0, 0);
+            }
         }
 
         // Lists
 
         // Every pad on the map, used by the validator and the minimap
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public IEnumerable<GridCoord> AllPads()
         {
-            yield break;
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i] != null && cells[i].kind == CellKind.Pad)
+                {
+                    yield return CoordOf(i);
+                }
+            }
         }
 
         // Every spawn pad, sorted by rank (rank 1 first), the brief requires predetermined spawns
         // SpawnSelector relies on this order: on a tie it picks the first one in the list, so the best rank wins
         // We need to make sure the list is sorted by rank, not by grid position
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public List<GridCoord> SpawnPads()
         {
-            return new List<GridCoord>();
+            List<GridCoord> spawns = new List<GridCoord>();
+            foreach (GridCoord pad in AllPads())
+            {
+                if (IsSpawn(pad))
+                {
+                    spawns.Add(pad);
+                }
+            }
+            spawns.Sort((a, b) => GetSpawnRank(a).CompareTo(GetSpawnRank(b)));
+            return spawns;
         }
     }
 }

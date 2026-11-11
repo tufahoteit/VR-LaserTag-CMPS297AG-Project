@@ -56,10 +56,41 @@ namespace Game.Core
         //     if target is outside the map, this line is finished
         //     add target if map.IsPad(target) and not isOccupied(target)
         // We need to make sure an occupied or non-pad cell does not end the line, only the map edge does
-        // TODO(Moustafa)
+        // TODO(Moustafa) [X] Completed
         public List<GridCoord> GetReachable(GridCoord start, MapLayout map, Func<GridCoord, bool> isOccupied)
         {
-            return new List<GridCoord>();
+            List<GridCoord> result = new List<GridCoord>();
+
+            for (int level = 0; level < map.levels; level++)
+            {
+                if (level == start.level)
+                {
+                    continue;
+                }
+                GridCoord target = new GridCoord(start.x, level, start.z);
+                if (map.IsPad(target) && !isOccupied(target))
+                {
+                    result.Add(target);
+                }
+            }
+
+            foreach ((int dx, int dz) in LineDirections)
+            {
+                for (int k = MinLineDistance; ; k++)
+                {
+                    GridCoord target = new GridCoord(start.x + dx * k, start.level, start.z + dz * k);
+                    if (!map.IsInBounds(target))
+                    {
+                        break;
+                    }
+                    if (map.IsPad(target) && !isOccupied(target))
+                    {
+                        result.Add(target);
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

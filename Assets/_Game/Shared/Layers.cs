@@ -7,12 +7,12 @@
 //
 // Who uses it
 //   MapBuilder puts every wall and floor piece on Cover
-//   Hitbox puts the head and torso colliders on Hitbox (PlayerCombat calls Hitbox.ApplyLayer when the player spawns)
+//   Hitbox puts the head and vest colliders on Hitbox (PlayerCombat calls Hitbox.ApplyLayer when the player spawns)
 //   LaserGun raycasts with ShotMask, and checks for a wall between the eyes and the muzzle with CoverMask
 //   LocalRig checks with CoverMask whether your head is inside a wall
 //
 // Your own body
-// Only the shooter's headset raycasts, so on your own headset Hitbox.ApplyLayer moves your own head and torso colliders
+// Only the shooter's headset raycasts, so on your own headset Hitbox.ApplyLayer moves your own head and vest colliders
 // to Unity's built-in Ignore Raycast layer: your laser can never hit yourself
 // On every other headset your colliders stay on Hitbox, so others can hit you
 // The template's rig, hands and controllers stay on Default, which no mask includes, so they never block a shot
@@ -27,20 +27,20 @@ namespace Game
     public static class Layers
     {
         public const string Cover = "Cover";    // map walls and floors, they block shots
-        public const string Hitbox = "Hitbox";  // player head and torso colliders
+        public const string Hitbox = "Hitbox";  // player head and vest colliders
 
         // Layer mask for laser raycasts: Cover + Hitbox only, everything else is ignored (Default too)
-        // TODO(Moustafa): LayerMask.GetMask(Cover, Hitbox)
+        // TODO(Moustafa) [X] Completed
         public static int ShotMask
         {
-            get { return 0; }
+            get { return LayerMask.GetMask(Cover, Hitbox); }
         }
 
         // Layer mask for walls only: the check that a gun pushed through a wall can't shoot from the other side
-        // TODO(Moustafa): LayerMask.GetMask(Cover)
+        // TODO(Moustafa) [X] Completed
         public static int CoverMask
         {
-            get { return 0; }
+            get { return LayerMask.GetMask(Cover); }
         }
     }
 }
