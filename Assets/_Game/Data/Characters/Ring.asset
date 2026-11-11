@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 622b89c3bca36dd4598b7aed412907e3, type: 3}
+  m_Name: Ring
+  m_EditorClassIdentifier: Assembly-CSharp::Game.CharacterDefinition
+  _displayName: Ring
+  _moveset: 1
+  _maxCharges: 4
+  _rechargeSeconds: 4.5
+  _description: 'Mid range: every pad exactly 2 away and your own column, one level up or down'

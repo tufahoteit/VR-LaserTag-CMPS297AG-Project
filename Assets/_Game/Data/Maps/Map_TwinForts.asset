@@ -1,0 +1,675 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 064c058b3bec8ff449a60149fafb6e17, type: 3}
+  m_Name: Map_TwinForts
+  m_EditorClassIdentifier: Assembly-CSharp::Game.MapDefinition
+  _layout:
+    width: 6
+    depth: 6
+    levels: 3
+    cells:
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 1
+      storedEast: 3
+      storedFloor: 0
+      padAnchor: 3
+      spawnRank: 7
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 7
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 3
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 5
+      spawnRank: 1
+    - kind: 1
+      storedNorth: 2
+      storedEast: 1
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 3
+    - kind: 1
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 2
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 1
+      storedEast: 3
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 3
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 2
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 3
+      spawnRank: 0
+    - kind: 2
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 4
+      spawnRank: 5
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 2
+      spawnRank: 6
+    - kind: 2
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 1
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 1
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 4
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 3
+      storedFloor: 0
+      padAnchor: 1
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 1
+      storedEast: 1
+      storedFloor: 0
+      padAnchor: 4
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 4
+    - kind: 1
+      storedNorth: 0
+      storedEast: 3
+      storedFloor: 0
+      padAnchor: 7
+      spawnRank: 2
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 3
+      storedFloor: 0
+      padAnchor: 5
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 1
+      spawnRank: 8
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 7
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 2
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 3
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 4
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 1
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 3
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 8
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 2
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 1
+      storedEast: 0
+      storedFloor: 1
+      padAnchor: 5
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 1
+      storedEast: 2
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 7
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 1
+      storedEast: 2
+      storedFloor: 0
+      padAnchor: 5
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 2
+      storedFloor: 1
+      padAnchor: 7
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 6
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 0
+      padAnchor: 1
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 3
+      storedFloor: 0
+      padAnchor: 2
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 2
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 5
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 2
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 4
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 3
+      storedEast: 0
+      storedFloor: 1
+      padAnchor: 1
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 3
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 3
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 3
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 2
+      storedEast: 0
+      storedFloor: 0
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 1
+      storedFloor: 1
+      padAnchor: 3
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 1
+      storedNorth: 0
+      storedEast: 2
+      storedFloor: 0
+      padAnchor: 2
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+    - kind: 0
+      storedNorth: 0
+      storedEast: 0
+      storedFloor: 2
+      padAnchor: 0
+      spawnRank: 0
+  _cellSize: 3
+  _levelHeight: 3
+  _origin: {x: 0, y: 0, z: 0}
+  _padAnchorDistance: 0.9
+  _halfWallHeight: 1.2
+  _windowBottom: 1.2
+  _windowTop: 1.8
+  _windowWidth: 0.6
