@@ -99,9 +99,6 @@ InitTestScene*.unity*
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
-# Claude desktop app scratch folder, never committed
-/Claude outputs/
-
 # OS junk
 Thumbs.db
 desktop.ini
