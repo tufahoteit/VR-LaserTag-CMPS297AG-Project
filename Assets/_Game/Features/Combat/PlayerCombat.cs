@@ -1,5 +1,5 @@
 // PlayerCombat.cs
-// Owners: Moustafa + Ali
+// Owner: Moustafa
 // Layer: Feature, Combat (NetworkBehaviour on the player prefab, one per player)
 //
 // What this is
@@ -88,19 +88,19 @@ namespace Game
         // Find the hitboxes (GetComponentsInChildren<Hitbox>), _head = the one with IsHead
         // Every hitbox: ApplyLayer(IsOwner), SetEnabled(IsAlive)
         // Subscribe to IsAlive changes: turn the hitboxes on or off
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         public override void OnNetworkSpawn()
         {
         }
 
         // Remove from All, clear Local, unsubscribe
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         public override void OnNetworkDespawn()
         {
         }
 
         // The PlayerCombat of this client, or null, works on every headset
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         public static PlayerCombat Get(ulong clientId)
         {
             return null;
@@ -111,7 +111,7 @@ namespace Game
         // The shooter reports one shot (see "One shot, on the host")
         // InvokePermission Owner: only this player's own headset can report shots for this player
         // victimClientId = NoVictim for a miss, hitPoint = where the laser stopped
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void ReportShotRpc(Vector3 origin, Vector3 hitPoint, ulong victimClientId, bool headshot)
         {
@@ -121,20 +121,20 @@ namespace Game
 
         // Spawn (respawn or match start): HP = MaxHp, IsAlive = true, _spawnTime = now,
         // _hasActedSinceSpawn = false, _lastDamageTime = minus infinity
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         public void ServerResetForSpawn()
         {
         }
 
         // The player shot or teleported, their spawn protection ends now
         // PlayerMovement calls it on a confirmed teleport, ReportShotRpc on a counted shot
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         public void ServerOnActed()
         {
         }
 
         // The match ended: IsAlive = false, no death and no kill (MatchManager sends everyone to the lobby area)
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         public void ServerClearForLobby()
         {
         }
@@ -146,7 +146,7 @@ namespace Game
         //   HP = max(0, HP - CombatRules.Damage(headshot, BodyDamage, HeadDamage)), _lastDamageTime = now
         //   HitRpc(attackerClientId, new HP, headshot)
         //   HP at 0: ServerDie(attackerClientId)
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         private void ServerApplyDamage(ulong attackerClientId, bool headshot)
         {
         }
@@ -157,13 +157,13 @@ namespace Game
         //   We need to make sure a killer who is no longer in the match (Get returns null) is skipped, the victim still dies and respawns
         //   DeathRpc(killerClientId)
         //   MatchManager.ServerOnPlayerKilled(OwnerClientId, killerClientId): lobby area, respawn timer, win check
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         private void ServerDie(ulong killerClientId)
         {
         }
 
         // Host, every frame while alive: Hp = CombatRules.RegenHp(...), only write it when the value changed
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         private void Update()
         {
         }
@@ -171,7 +171,7 @@ namespace Game
         // Host to headsets, they only show things
 
         // Everyone except the shooter: RaiseShotFired (beam and sound), the shooter already showed it
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         [Rpc(SendTo.NotOwner)]
         private void ShowShotRpc(Vector3 from, Vector3 to, bool hitSomething)
         {
@@ -179,14 +179,14 @@ namespace Game
 
         // Everyone (the host too, it runs right away there), sent on the victim's object:
         // RaisePlayerDamaged(OwnerClientId, attackerClientId, newHp, headshot)
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         [Rpc(SendTo.Everyone)]
         private void HitRpc(ulong attackerClientId, float newHp, bool headshot)
         {
         }
 
         // Everyone: RaisePlayerKilled(OwnerClientId, killerClientId), Feedback plays the death burst at this player
-        // TODO(Moustafa + Ali)
+        // TODO(Moustafa)
         [Rpc(SendTo.Everyone)]
         private void DeathRpc(ulong killerClientId)
         {

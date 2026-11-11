@@ -1,5 +1,5 @@
 // MovesetTests.cs
-// Owners: Moustafa (Ray), Joe (Cluster), Ali (Ring), shared rules: anyone
+// Owners: Moustafa (Ray), Joe (Cluster), Karim (Ring), shared rules: Joseph
 // Layer: Tests, EditMode
 //
 // Why we test
@@ -43,7 +43,7 @@ public class MovesetTests
     // Real maps have Empty and Solid cells too, this one doesn't on purpose:
     // with a pad everywhere, a missing target can only mean the moveset pattern is wrong
     // Tests that check non-pad cells, walls or occupied pads change just that one thing on top of this map
-    // TODO(any): MapLayout.CreateEmpty(6, 6, 3), then EditCell every cell to CellKind.Pad with a Solid floor
+    // TODO(Joseph): MapLayout.CreateEmpty(6, 6, 3), then EditCell every cell to CellKind.Pad with a Solid floor
     private static MapLayout OpenMap()
     {
         return null;
@@ -155,72 +155,72 @@ public class MovesetTests
         Assert.Inconclusive("TODO(Joe)");
     }
 
-    // Ring (Ali)
+    // Ring (Karim)
 
     // From (2,L1,2): all 16 pads exactly 2 away on L1 are in the list, including (4,L1,3) off the straight lines
-    // TODO(Ali)
+    // TODO(Karim)
     [Test]
     public void Ring_ReachesAll16PadsTwoAway()
     {
-        Assert.Inconclusive("TODO(Ali)");
+        Assert.Inconclusive("TODO(Karim)");
     }
 
     // From (2,L1,2): nothing 1 away, e.g. (3,L1,2) and (3,L0,3) are not in the list
-    // TODO(Ali)
+    // TODO(Karim)
     [Test]
     public void Ring_NeverReachesOneAway()
     {
-        Assert.Inconclusive("TODO(Ali)");
+        Assert.Inconclusive("TODO(Karim)");
     }
 
     // From (2,L0,2): (4,L1,2) is in the list, (4,L2,2) is not, the ring changes level by at most 1
-    // TODO(Ali)
+    // TODO(Karim)
     [Test]
     public void Ring_LevelChangeAtMostOne()
     {
-        Assert.Inconclusive("TODO(Ali)");
+        Assert.Inconclusive("TODO(Karim)");
     }
 
     // From (2,L0,2): (2,L1,2) is in the list, (2,L2,2) is not, own column is only 1 level
-    // TODO(Ali)
+    // TODO(Karim)
     [Test]
     public void Ring_OwnColumn_OneLevelOnly()
     {
-        Assert.Inconclusive("TODO(Ali)");
+        Assert.Inconclusive("TODO(Karim)");
     }
 
-    // Shared rules (anyone), each test runs all three movesets
+    // Shared rules (Joseph), each test runs all three movesets
 
     // Mark a target pad occupied: it disappears from every moveset's list
-    // TODO(any)
+    // TODO(Joseph)
     [Test]
     public void AllMovesets_ExcludeOccupiedPads()
     {
-        Assert.Inconclusive("TODO(any)");
+        Assert.Inconclusive("TODO(Joseph)");
     }
 
     // Make a target cell Empty or Solid: it disappears from every moveset's list
-    // TODO(any)
+    // TODO(Joseph)
     [Test]
     public void AllMovesets_ExcludeNonPadCells()
     {
-        Assert.Inconclusive("TODO(any)");
+        Assert.Inconclusive("TODO(Joseph)");
     }
 
     // The start pad is never in any moveset's list
-    // TODO(any)
+    // TODO(Joseph)
     [Test]
     public void AllMovesets_NeverIncludeStartPad()
     {
-        Assert.Inconclusive("TODO(any)");
+        Assert.Inconclusive("TODO(Joseph)");
     }
 
     // Put Solid walls and floors everywhere: every list is exactly the same as on the open map
-    // TODO(any)
+    // TODO(Joseph)
     [Test]
     public void AllMovesets_IgnoreWallsAndFloors()
     {
-        Assert.Inconclusive("TODO(any)");
+        Assert.Inconclusive("TODO(Joseph)");
     }
 
     // MovesetFactory.Create(kind).Kind == kind for Cluster, Ring and Ray

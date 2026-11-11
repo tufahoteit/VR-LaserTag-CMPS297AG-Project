@@ -1,5 +1,5 @@
 // HealthBar.cs
-// Owner: decided in the rebalance
+// Owner: Karim
 // Layer: Feature, UI (on the player prefab, one per player, on every headset, visuals only)
 //
 // What this is
@@ -67,14 +67,14 @@ namespace Game
         private float _trailWaitUntil;
 
         // Find PlayerCombat on this object, BuildBar, start hidden
-        // TODO(Owner)
+        // TODO(Karim)
         private void Awake()
         {
         }
 
         // Make _root (an empty child) and the three cubes under it, remove their colliders, give them _barMaterial
         // Order front to back: fill in front of trail in front of background, a few millimetres apart so they never flicker
-        // TODO(Owner)
+        // TODO(Karim)
         private void BuildBar()
         {
         }
@@ -88,26 +88,26 @@ namespace Game
         //   trail: if fraction dropped since last frame, _trailWaitUntil = now + _trailDelay,
         //     after that, _trailFraction moves down toward fraction at _trailSpeed, SetWidth(_trail, _trailFraction)
         //   apply _alpha to all three colours
-        // TODO(Owner)
+        // TODO(Karim)
         private void LateUpdate()
         {
         }
 
         // Scale a cube's width to fraction of _width and shift it so its left edge stays in place
-        // TODO(Owner)
+        // TODO(Karim)
         private void SetWidth(Transform bar, float fraction)
         {
         }
 
         // Green at full, yellow at half, red near empty
-        // TODO(Owner)
+        // TODO(Karim)
         private static Color FillColor(float fraction)
         {
             return Color.green;
         }
 
         // Colour one cube without making a new material: _block.SetColor("_BaseColor", color), renderer.SetPropertyBlock(_block)
-        // TODO(Owner)
+        // TODO(Karim)
         private void SetColor(Transform bar, Color color)
         {
         }

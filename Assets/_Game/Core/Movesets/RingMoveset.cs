@@ -1,5 +1,5 @@
 // RingMoveset.cs
-// Owner: Ali
+// Owner: Karim
 // Layer: Core, pure C#, no Unity
 //
 // Ring: mid range, charges set in Ring.asset (around 4)
@@ -45,7 +45,7 @@ namespace Game.Core
         //       target = (start.x + dx, level, start.z + dz)
         //       add target if map.IsPad(target) and not isOccupied(target)
         // We need to make sure the 8 pads 1 away are never added, only the outer edge of the square counts
-        // TODO(Ali)
+        // TODO(Karim)
         public List<GridCoord> GetReachable(GridCoord start, MapLayout map, Func<GridCoord, bool> isOccupied)
         {
             return new List<GridCoord>();

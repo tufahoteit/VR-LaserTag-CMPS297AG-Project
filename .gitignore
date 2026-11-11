@@ -106,3 +106,6 @@ InitTestScene*.unity*
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Local report material (screenshots), kept out of the repo
+/Docs/

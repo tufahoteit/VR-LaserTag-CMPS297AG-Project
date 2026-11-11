@@ -14,8 +14,7 @@ Team: Moustafa (lead), Karim, Joseph, Joe, Ali
 ## Getting started
 
 1. Clone the repo and open the folder in Unity Hub with Unity 6000.6.3f1 (with Android Build Support)
-2. Ask Moustafa to add you to the Unity Cloud project, it is needed for Relay
-3. Open the main scene and press Play, the XR Interaction Simulator lets you test without a headset
+2. Open the main scene and press Play, the XR Interaction Simulator lets you test without a headset
 
 ## Where things are
 

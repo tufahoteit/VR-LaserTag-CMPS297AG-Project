@@ -1,5 +1,5 @@
 // PlayerProfile.cs
-// Owner: Karim
+// Owner: Ali
 // Layer: Feature, Match (NetworkBehaviour on the player prefab, synced to every headset)
 //
 // What this is
@@ -65,21 +65,21 @@ namespace Game
         private XRINetworkPlayer _templatePlayer;
 
         // This player's name, on every headset
-        // TODO(Karim): _templatePlayer.playerName, or "P" + (ColorIndex + 1) if it is empty
+        // TODO(Ali): _templatePlayer.playerName, or "P" + (ColorIndex + 1) if it is empty
         public string DisplayName
         {
             get { return ""; }
         }
 
         // This player's colour
-        // TODO(Karim): _palette[ColorIndex], clamped to the palette size
+        // TODO(Ali): _palette[ColorIndex], clamped to the palette size
         public Color Color
         {
             get { return Color.white; }
         }
 
         // This player's chosen character
-        // TODO(Karim): _settings.Characters[CharacterIndex], null if the index is out of range
+        // TODO(Ali): _settings.Characters[CharacterIndex], null if the index is out of range
         public CharacterDefinition Character
         {
             get { return null; }
@@ -88,39 +88,39 @@ namespace Game
         // Find _templatePlayer (GetComponent<XRINetworkPlayer>), add to All, set Local if IsOwner
         // Host only: ColorIndex = the lowest slot no other player in All is using
         // Owner only: ApplyColorToTemplate now and whenever ColorIndex changes (the host's value may arrive a frame later)
-        // TODO(Karim)
+        // TODO(Ali)
         public override void OnNetworkSpawn()
         {
         }
 
         // Remove from All, clear Local if it was this one, unsubscribe
-        // TODO(Karim)
+        // TODO(Ali)
         public override void OnNetworkDespawn()
         {
         }
 
         // Owner only: XRINetworkGameManager.LocalPlayerColor.Value = Color
         // The template sees the change, writes its own synced colour and tints the shirt and name tag on every headset
-        // TODO(Karim)
+        // TODO(Ali)
         private void ApplyColorToTemplate()
         {
         }
 
         // A player's profile by client id, or null
-        // TODO(Karim)
+        // TODO(Ali)
         public static PlayerProfile Get(ulong clientId)
         {
             return null;
         }
 
         // Host only: +1 kill, called by PlayerCombat when this player gets a kill
-        // TODO(Karim)
+        // TODO(Ali)
         public void AddKill()
         {
         }
 
         // Host only: kills back to 0, called by MatchManager when a new match starts
-        // TODO(Karim)
+        // TODO(Ali)
         public void ResetKills()
         {
         }
@@ -130,7 +130,7 @@ namespace Game
         // (dead, or the match is in Lobby or Countdown), then set CharacterIndex
         // It applies at the next spawn: PlayerMovement reads Character when the player spawns
         // InvokePermission Owner: only this player's own headset can pick this player's character
-        // TODO(Karim)
+        // TODO(Ali)
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestCharacterRpc(int index)
         {

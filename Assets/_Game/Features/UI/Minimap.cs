@@ -1,5 +1,5 @@
 // Minimap.cs
-// Owner: Joseph
+// Owner: Ali
 // Layer: Feature, UI (local only, on the MinimapRoot of your board, view only)
 //
 // What this is
@@ -68,13 +68,13 @@ namespace Game
         private MaterialPropertyBlock _block;
 
         // Subscribe to MapBuilder.Instance.Built (or BuildPlans now if the arena is already built) and GameEvents.PlayerLeft
-        // TODO(Joseph)
+        // TODO(Ali)
         private void Start()
         {
         }
 
         // Unsubscribe
-        // TODO(Joseph)
+        // TODO(Ali)
         private void OnDestroy()
         {
         }
@@ -85,7 +85,7 @@ namespace Game
         //   MapBuilder.Instance.BuildCopy(plan, _scale, layer Default, that level)
         //   the copy shifted so the level's floor centre sits on the plan object
         // Then MakeOutline, and MakeArrow for your own dot
-        // TODO(Joseph)
+        // TODO(Ali)
         private void BuildPlans()
         {
         }
@@ -96,34 +96,34 @@ namespace Game
         //   a player with no dot yet gets one (MakeDot in their colour)
         //   your arrow: on your dot, turned to where your head faces on the floor (LocalRig.Instance.Head forward, ignoring height)
         //   the outline: around the plan of your current level, hidden while you are in the lobby area
-        // TODO(Joseph)
+        // TODO(Ali)
         private void LateUpdate()
         {
         }
 
         // Listener for GameEvents.PlayerLeft (runs by itself when a player disconnects, connected in Start)
         // Destroy their dot and forget it
-        // TODO(Joseph)
+        // TODO(Ali)
         private void OnPlayerLeft(ulong clientId)
         {
         }
 
         // A small sphere under this object in color, no collider
-        // TODO(Joseph)
+        // TODO(Ali)
         private Transform MakeDot(Color color)
         {
             return null;
         }
 
         // A small flat triangle or cone under this object for your facing, no collider
-        // TODO(Joseph)
+        // TODO(Ali)
         private Transform MakeArrow()
         {
             return null;
         }
 
         // A thin square frame (four flat cubes) around one plan, white, no collider, moved to your level's plan every frame
-        // TODO(Joseph)
+        // TODO(Ali)
         private Transform MakeOutline()
         {
             return null;

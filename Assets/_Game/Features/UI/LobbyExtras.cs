@@ -1,5 +1,5 @@
 // LobbyExtras.cs
-// Owner: Ali
+// Owner: Karim
 // Layer: Feature, UI (local only, a small canvas in the lobby area, view only, sends requests)
 //
 // What this is
@@ -47,7 +47,7 @@ namespace Game
 
         // Connect the buttons: Start -> OnStartPressed, Height -> OnHeightPressed, character i -> OnCharacterPressed(i)
         // We need to make sure each character button passes its own index (copy i into a local before the lambda)
-        // TODO(Ali)
+        // TODO(Karim)
         private void Start()
         {
         }
@@ -59,25 +59,25 @@ namespace Game
         //   status: "Room ABC123   Lobby   3/5 players" (XRINetworkGameManager.ConnectedRoomCode),
         //     plus SessionGuard.LastDisconnectReason on a second line if it isn't empty
         //   not connected (PlayerProfile.Local is null): only the status line, "Not connected"
-        // TODO(Ali)
+        // TODO(Karim)
         private void Update()
         {
         }
 
         // Host only: MatchManager.Instance.ServerStartMatch()
-        // TODO(Ali)
+        // TODO(Karim)
         private void OnStartPressed()
         {
         }
 
         // LocalRig.Instance.CalibrateHeight()
-        // TODO(Ali)
+        // TODO(Karim)
         private void OnHeightPressed()
         {
         }
 
         // PlayerProfile.Local.RequestCharacterRpc(index)
-        // TODO(Ali)
+        // TODO(Karim)
         private void OnCharacterPressed(int index)
         {
         }
