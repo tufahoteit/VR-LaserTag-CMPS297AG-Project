@@ -20,8 +20,7 @@ Team: Moustafa (lead), Karim, Joseph, Joe, Ali
 ## Where things are
 
 - `Assets/_Game/` our game: Core (rules, pure C#), Data (settings assets), Features (networked and local scripts), Shared, Tests, Audio
-- `Assets/VRMPAssets/` the template (three small changes, see Docs)
-- `Docs/` design documents and setup screenshots
+- `Assets/VRMPAssets/` the template
 - `Tools/` scripts used to generate some of the sounds
 - `Licenses/` licences of third-party assets
 
