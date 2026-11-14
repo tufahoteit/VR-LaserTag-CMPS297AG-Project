@@ -19,10 +19,12 @@ Team: Moustafa Hoteit, Joseph Abi Saad, Joe Abi Rizk, Ali M. Sleiman, Karim Rama
 
 ## Install on a Quest
 
+Download `VRLaserTag_PadBlink.apk` from the [latest release](https://github.com/tufahoteit/VR-LaserTag-CMPS297AG-Project/releases/latest).
+
 Connect the headset to the PC with a USB-C cable, then either:
 
 1. **Build And Run** from Unity (File, Build Profiles, Android)
-2. **SideQuest:** sideload `VRLaserTag_PadBlink.apk`, then open it from Library, Unknown Sources
+2. **SideQuest:** sideload the APK, then open it from Library, Unknown Sources
 
 The headset needs internet: rooms run through Unity Relay.
 
@@ -62,7 +64,7 @@ A match lasts up to 9 minutes; a tie at the end goes to sudden death.
 3. Press Play to test in the editor, the XR Interaction Simulator stands in for a headset
 4. To build for Quest: File, Build Profiles, Android, Switch Platform, then Build
 
-Rooms use Unity Relay, so the project must stay linked to its Unity Cloud project.
+Rooms use Unity Relay through our Unity Cloud project. The APK needs nothing. To run from the editor, ask us to add your Unity account to the project, or link the project to your own Unity Cloud project (Edit, Project Settings, Services) and enable Relay. A build from your own project only sees its own rooms.
 
 ## Tests
 
