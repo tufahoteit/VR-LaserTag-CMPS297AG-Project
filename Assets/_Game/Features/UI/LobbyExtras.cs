@@ -74,7 +74,7 @@ namespace Game
         //   character buttons: interactable only while you are in the lobby area (dead, or Lobby or Countdown),
         //     the one at PlayerProfile.Local.CharacterIndex highlighted
         //   status: "Room ABC123   Lobby   3/5 players" (XRINetworkGameManager.ConnectedRoomCode),
-        //     plus SessionGuard.LastDisconnectReason on a second line if it isn't empty
+        //     plus SessionGuard.LastDisconnectReason on a second line while not connected (an old reason is hidden once you are back in a room)
         //   not connected (PlayerProfile.Local is null): only the status line, "Not connected"
         // TODO(Karim) [X] Completed
         private void Update()
@@ -123,7 +123,7 @@ namespace Game
                 string phase = match != null ? match.Phase.Value.ToString() : "";
                 status = $"Room {XRINetworkGameManager.ConnectedRoomCode}   {phase}   {PlayerProfile.All.Count}/{_settings.MaxPlayers} players";
             }
-            if (!string.IsNullOrEmpty(SessionGuard.LastDisconnectReason))
+            if (!connected && !string.IsNullOrEmpty(SessionGuard.LastDisconnectReason))
             {
                 status += "\n" + SessionGuard.LastDisconnectReason;
             }
