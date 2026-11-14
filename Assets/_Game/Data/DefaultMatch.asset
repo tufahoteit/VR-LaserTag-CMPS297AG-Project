@@ -31,5 +31,5 @@ MonoBehaviour:
   _hitRangeTolerance: 1
   _originTolerance: 1.5
   _minTeleportGap: 0.3
-  _leashRadius: 0.6
+  _leashRadius: 1
   _standardEyeHeight: 1.65

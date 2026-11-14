@@ -78,8 +78,8 @@ namespace Game
         [Header("Movement")]
         [Tooltip("Shortest time between two teleports: 0.3")]
         [SerializeField, Range(0f, 2f)] private float _minTeleportGap = 0.3f;
-        [Tooltip("How far (m) your head may drift from the pad centre before the view starts to fade: 0.6")]
-        [SerializeField, Range(0.2f, 1.5f)] private float _leashRadius = 0.6f;
+        [Tooltip("How far (m) your head may drift from the pad centre before the view starts to fade: 1.0")]
+        [SerializeField, Range(0.2f, 1.5f)] private float _leashRadius = 1.0f;
         [Tooltip("Every player's eyes are moved to this height (m) above the pad, so tall and short players are equal: 1.65")]
         [SerializeField, Range(1.2f, 2f)] private float _standardEyeHeight = 1.65f;
 

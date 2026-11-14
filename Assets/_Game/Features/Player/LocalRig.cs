@@ -12,7 +12,7 @@
 //   FaceTowards: turns you toward the arena centre, on spawn only
 //   eye height: puts every player's eyes at 1.65 m, so tall and short players see and are seen the same
 //   head in a wall: fades your view to black if your head goes inside a wall, so nobody can peek through geometry
-//   leash: fades your view when your head drifts more than 0.6 m from your pad centre
+//   leash: fades your view when your head drifts more than 1.0 m from your pad centre
 //
 // Moving you
 // There is no walking: the thumbstick never moves you, only teleports do
@@ -25,8 +25,8 @@
 // And the game can't freeze your head: if the view ignored your real movement, the world would slide with you
 // and players get motion sick within seconds, so the camera always follows your real head
 // So instead of stopping you, two fades make going too far useless:
-//   within 0.6 m of the pad centre: counted as leaning or crouching, works normally (this is how you peek)
-//   beyond 0.6 m (you stepped in your room): the view fades, fully black at 0.8 m, step back and it clears
+//   within 1.0 m of the pad centre: counted as leaning or crouching, works normally (this is how you peek)
+//   beyond 1.0 m (you stepped in your room): the view fades, fully black at 1.2 m, step back and it clears
 //   head inside a wall: the view goes black, so you never see behind cover
 // Walls can't block your head in VR, collision only stops movement the game itself does
 //
@@ -63,7 +63,7 @@ namespace Game
         [SerializeField] private Renderer _fadeRenderer;
         [SerializeField, Range(0.05f, 0.3f)] private float _headRadius = 0.12f;
         [SerializeField, Range(1f, 20f)] private float _fadeSpeed = 6f;
-        [Tooltip("The leash fade starts at the leash radius (0.6 m) and is fully black this many metres further (0.8 m)")]
+        [Tooltip("The leash fade starts at the leash radius (1.0 m) and is fully black this many metres further (1.2 m)")]
         [SerializeField, Range(0.05f, 0.5f)] private float _leashFadeWidth = 0.2f;
 
         private XROrigin _origin;
