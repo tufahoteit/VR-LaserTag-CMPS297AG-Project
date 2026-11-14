@@ -179,8 +179,10 @@ namespace XRMultiplayer
 
             if (connected)
             {
-                m_HostRoomPanel.SetActive(XRINetworkPlayer.LocalPlayer.IsSessionOwner);
-                m_ClientRoomPanel.SetActive(!XRINetworkPlayer.LocalPlayer.IsSessionOwner);
+                // Client-host: a joining player's avatar spawns after the host approves the join, so it can still be null here
+                bool isHost = Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsServer;
+                m_HostRoomPanel.SetActive(isHost);
+                m_ClientRoomPanel.SetActive(!isHost);
                 UpdateRoomName(XRINetworkGameManager.ConnectedRoomName.Value);
                 m_MutedIcon.enabled = false;
                 m_MicOnIcon.enabled = true;
